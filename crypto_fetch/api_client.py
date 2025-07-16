@@ -1,20 +1,25 @@
 import os
 import requests
 
-from .constants import API_BASE
-from .constants import API_KEY_ENV_VAR
-from .constants import DEFAULT_FIAT
+from crypto_fetch.constants import API_BASE
+from crypto_fetch.constants import API_KEY_ENV_VAR
 
-def fetch_crypto_price(tickers, currency="EUR"):
+def fetch_crypto_price(tickers, currency):
     """
-    Fetch the price of a cryptocurrency from the CMC API.
-    If no fiat currency is speicifed, the default fiat is EUR (€).
+    Fetches the latest data related to one or more cryptocurrencies.
+
+    Args:
+        tickers: The cryptocurrency ticker symbols to fetch.
+        currency: The fiat currency which the data will be in.
+
+    Returns:
+        The API response formatted as a dict.
     """
     api_key = _get_api_key()
 
     headers = {
         "Accepts": "application/json",
-        "X-CMC_PRO_API_KEY": "d953ca60-947c-479d-8962-87c9d41a0487"
+        "X-CMC_PRO_API_KEY": api_key
     }
     params = {
         "symbol": tickers,
@@ -37,7 +42,10 @@ def fetch_crypto_price(tickers, currency="EUR"):
 
 def _get_api_key():
     """
-    Retrieve the CMC API key stored in the COINMARKETCAP_API_KEY environment variable.
+    Gets the CMC API key stored in the COINMARKETCAP_API_KEY environment variable.
+
+    Returns:
+        The CMC API key stored in the environment variable.
     """
     api_key = os.getenv("COINMARKETCAP_API_KEY")
 
@@ -47,6 +55,13 @@ def _get_api_key():
 def _parse_json_response(data, currency):
     """
     Parse the JSON response received from the CMC API.
+
+    Args:
+        data: The JSON response received from the API.
+        currency: The fiat currency the data is in.
+
+    Returns:
+        A formatted dict containing the response data.
     """
     result = {}
     raw_data = data.get("data", {})
