@@ -6,6 +6,16 @@ from crypto_fetch.formatter import format_price_output
 def main():
     """
     crypto-fetch entry point
+
+    Usage:
+    - price command
+        $ crypto-fetch price XRP 
+        $ crypto-fetch price BTC,XLM -c USD
+        $ crypto-fetch price hbar --currency aud
+
+    - convert convert
+        $ crypto-fetch convert 50 -t BTC
+        $ crypto-fetch convert 1000 --ticker XRP --currency CAD
     """
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
     subparser = parser.add_subparsers(dest="command", required=True)

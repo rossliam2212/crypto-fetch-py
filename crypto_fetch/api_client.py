@@ -8,9 +8,30 @@ def fetch_crypto_price(tickers, currency):
     """
     Fetches the latest data related to one or more cryptocurrencies.
 
+    Supported Fiat Currencies:
+    - "EUR": "€",
+    - "GBP": "£",
+    - "USD": "$",
+    - "CAD": "$",
+    - "AUD": "$",
+    - "NZD": "$",
+    - "HKD": "$",
+    - "CLP": "$", # Chilean Peso
+    - "COP": "$", # Colombian Peso
+    - "MXN": "$", # Mexican Peso
+    - "CUP": "$", # Cuban Peso
+    - "DOP": "$", # Dominican Peso
+    - "CNY": "¥", # Chinese Yuan
+    - "JPY": "¥", # Japanese Yen
+    - "CHF": "Fr", # Swiss Franc
+    - "NOK": "kr", # Norwegian Krone
+    - "DKK": "kr", # Danish Krone
+    - "SEK": " kr", # Swedish Krona
+    - "HUF": "Ft" # Hungarian Forint
+    
     Args:
-        tickers: The cryptocurrency ticker symbols to fetch.
-        currency: The fiat currency which the data will be in.
+        tickers: The cryptocurrency ticker symbol(s).
+        currency: The fiat currency code to retriece the data in.
 
     Returns:
         The API response formatted as a dict.
@@ -58,7 +79,7 @@ def _parse_json_response(data, currency):
 
     Args:
         data: The JSON response received from the API.
-        currency: The fiat currency the data is in.
+        currency: The fiat currency code the data is in.
 
     Returns:
         A formatted dict containing the response data.

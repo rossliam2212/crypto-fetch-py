@@ -1,25 +1,34 @@
-def format_price_output(data, currency, verbose):
+from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
+from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
+
+def format_price_output(data, currency_code, verbose):
     """
     Formats the cryptocurrency data received from the CMC API.
 
     Args:
-        data (dict): The data received from the CMC API.
-        currency (str): The fiat currency to use.
-        verbose (bool): Whether or not the output should be verbose.
+        - data (dict): The data received from the CMC API.
+        - currency_code (str): The fiat currency code.
+        - verbose (bool): Whether or not the output should be verbose.
 
     Returns:
-        Formatted output string
+        - Formatted output string.
     """
     if not data:
-        return "No data available"
+        return "❌ No data available"
     
     output = []
-    currency = currency.upper()
-    currency_symbol = _get_currency_symbol(currency)
+    currency_code = currency_code.upper()
+    currency_symbol = _get_currency_symbol(currency_code)
 
     for ticker, data in data.items():
         price = data.get("price", 0)
-        base_line = f"> ${ticker}: {price} {currency}"
+        
+        if currency_symbol == "$" or currency_symbol == "¥":
+            base_line = f"> ${ticker}: {currency_symbol}{price} ({currency_code})"
+        elif currency_code in CURRENCY_CODE_ONLY_MAP:
+            base_line = f"> ${ticker}: {price}{currency_symbol} ({currency_code})"
+        else:
+            base_line = f"> ${ticker}: {currency_symbol}{price}"
 
         if not verbose:
             output.append(base_line)
@@ -29,12 +38,14 @@ def format_price_output(data, currency, verbose):
 
 def _get_currency_symbol(currency):
     """
-    Get the symbol corresponding to the fiat currency
+    Get the symbol corresponding to a fiat currency.
 
     Args:
-        currency: The fiat currency whose symbol is wanted
+        - currency: The fiat currency code.
     
     Returns:
-        The fiat currencies symbol
+        - The fiat currencies symbol.
     """
-    # TODO Implement
+    # TODO Add error handling
+    if currency in CURRENCY_SYMBOL_MAP:
+        return CURRENCY_SYMBOL_MAP[currency]
