@@ -1,5 +1,6 @@
 # Base CMC API
 API_BASE = "https://pro-api.coinmarketcap.com/v1"
+API_LATEST_EP = "/cryptocurrency/quotes/latest"
 
 # Environment var CMC API is expected
 API_KEY_ENV_VAR = "COINMARKETCAP_API_KEY"

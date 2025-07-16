@@ -1,7 +1,9 @@
 import argparse
 
+from crypto_fetch.api_client import fetch_crypto_price_data
 from crypto_fetch.api_client import fetch_crypto_price
 from crypto_fetch.formatter import format_price_output
+from crypto_fetch.formatter import format_convert_output
 
 def main():
     """
@@ -34,14 +36,26 @@ def main():
     convert_parser.add_argument("-f", "--file", help="Portfolio file (future feature)")
 
     args = parser.parse_args()
-    
+        
     if args.command == "price":
+        # convert ticker input to a list
         tickers = [t.strip().upper() for t in args.tickers.split(",")]
+        # convert to comma-separated str
         tickers_str = ",".join(tickers)
-        print(f"FETCHING DATA FOR TICKER(S): {tickers_str}")
 
-        data = fetch_crypto_price(tickers_str, args.currency)
+        print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}")
+
+        data = fetch_crypto_price_data(tickers_str, args.currency)
+
+        # print formatted output
         print(format_price_output(data, args.currency, args.verbose))
 
     elif args.command == "convert":
-        print("convert command")
+        amount_to_convert = args.amount
+        ticker = args.ticker
+
+        print("CONVERTING...")
+        
+        price = fetch_crypto_price(ticker, args.currency)
+        converted_amount = amount_to_convert * price
+        print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))

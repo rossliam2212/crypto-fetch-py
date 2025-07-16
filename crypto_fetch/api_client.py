@@ -3,38 +3,55 @@ import requests
 
 from crypto_fetch.constants import API_BASE
 from crypto_fetch.constants import API_KEY_ENV_VAR
+from crypto_fetch.constants import API_LATEST_EP
 
-def fetch_crypto_price(tickers, currency):
+def fetch_crypto_price(ticker, currency_code):
     """
-    Fetches the latest data related to one or more cryptocurrencies.
+    Fetches the price of a cryptocurrency.
 
-    Supported Fiat Currencies:
-    - "EUR": "€",
-    - "GBP": "£",
-    - "USD": "$",
-    - "CAD": "$",
-    - "AUD": "$",
-    - "NZD": "$",
-    - "HKD": "$",
-    - "CLP": "$", # Chilean Peso
-    - "COP": "$", # Colombian Peso
-    - "MXN": "$", # Mexican Peso
-    - "CUP": "$", # Cuban Peso
-    - "DOP": "$", # Dominican Peso
-    - "CNY": "¥", # Chinese Yuan
-    - "JPY": "¥", # Japanese Yen
-    - "CHF": "Fr", # Swiss Franc
-    - "NOK": "kr", # Norwegian Krone
-    - "DKK": "kr", # Danish Krone
-    - "SEK": " kr", # Swedish Krona
-    - "HUF": "Ft" # Hungarian Forint
-    
     Args:
-        tickers: The cryptocurrency ticker symbol(s).
-        currency: The fiat currency code to retriece the data in.
+        - ticker (str): The ticker of the cryptocurrency to fetch.
+        - currency_code (str): The fiat currency to get the price in.
 
     Returns:
-        The API response formatted as a dict.
+        - The price of the cryptocurrency. 
+    """
+    api_key = _get_api_key()
+
+    headers = {
+        "Accepts": "application/json",
+        "X-CMC_PRO_API_KEY": api_key
+    }
+    params = {
+        "symbol": ticker,
+        "convert": currency_code.upper()
+    }
+
+    try:
+        response = requests.get(
+            f"{API_BASE}{API_LATEST_EP}",
+            headers=headers,
+            params=params,
+            timeout=10
+        )
+        data = response.json()
+        
+        # TODO Add error handling
+        price = data['data'][ticker]['quote'][currency_code]['price']
+        return price
+    except requests.exceptions.RequestException as e:
+        raise APIResponseError(f"Network error: {str(e)}") from e
+
+def fetch_crypto_price_data(tickers, currency):
+    """
+    Fetches the latest data related to one or more cryptocurrencies.
+    
+    Args:
+        - tickers (list): A list of cryptocurrency ticker symbol(s).
+        - currency (str): The fiat currency code to retriece the data in.
+
+    Returns:
+        - The API response formatted as a dict.
     """
     api_key = _get_api_key()
 
@@ -49,7 +66,7 @@ def fetch_crypto_price(tickers, currency):
 
     try:
         response = requests.get(
-            f"https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest",
+            f"{API_BASE}{API_LATEST_EP}",
             headers=headers,
             params=params,
             timeout=10
@@ -63,12 +80,12 @@ def fetch_crypto_price(tickers, currency):
 
 def _get_api_key():
     """
-    Gets the CMC API key stored in the COINMARKETCAP_API_KEY environment variable.
+    Gets the CMC API key stored in the 'COINMARKETCAP_API_KEY' environment variable.
 
     Returns:
-        The CMC API key stored in the environment variable.
+        - The CMC API key stored in the environment variable.
     """
-    api_key = os.getenv("COINMARKETCAP_API_KEY")
+    api_key = os.getenv(API_KEY_ENV_VAR)
 
     # TODO Add error handling
     return api_key
@@ -78,11 +95,11 @@ def _parse_json_response(data, currency):
     Parse the JSON response received from the CMC API.
 
     Args:
-        data: The JSON response received from the API.
-        currency: The fiat currency code the data is in.
+        - data (dict): The JSON response received from the API.
+        - currency (str): The fiat currency code the data is in.
 
     Returns:
-        A formatted dict containing the response data.
+        - A formatted dict containing the response data.
     """
     result = {}
     raw_data = data.get("data", {})
