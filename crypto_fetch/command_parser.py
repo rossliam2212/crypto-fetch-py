@@ -1,4 +1,5 @@
 import argparse
+from datetime import date
 
 from crypto_fetch.api_client import fetch_crypto_price_data
 from crypto_fetch.api_client import fetch_crypto_price
@@ -44,6 +45,7 @@ def main():
         tickers_str = ",".join(tickers)
 
         print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}")
+        print(f"DATE: {date.today().strftime("%A, %B %d, %Y")}\n")
 
         data = fetch_crypto_price_data(tickers_str, args.currency)
 
@@ -55,7 +57,7 @@ def main():
         ticker = args.ticker
 
         print("CONVERTING...")
-        
+
         price = fetch_crypto_price(ticker, args.currency)
         converted_amount = amount_to_convert * price
         print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
