@@ -4,6 +4,8 @@ import requests
 from crypto_fetch.constants import API_BASE
 from crypto_fetch.constants import API_KEY_ENV_VAR
 from crypto_fetch.constants import API_LATEST_EP
+from crypto_fetch.exceptions import APIKeyError
+from crypto_fetch.exceptions import APIResponseError
 
 def fetch_crypto_price(ticker, currency_code):
     """
@@ -16,31 +18,36 @@ def fetch_crypto_price(ticker, currency_code):
     Returns:
         - The price of the cryptocurrency. 
     """
-    api_key = _get_api_key()
-
-    headers = {
-        "Accepts": "application/json",
-        "X-CMC_PRO_API_KEY": api_key
-    }
-    params = {
-        "symbol": ticker,
-        "convert": currency_code.upper()
-    }
-
     try:
+        api_key = _get_api_key()
+
+        headers = {
+            "Accepts": "application/json",
+            "X-CMC_PRO_API_KEY": api_key
+        }
+        params = {
+            "symbol": ticker,
+            "convert": currency_code.upper()
+        }
+
         response = requests.get(
             f"{API_BASE}{API_LATEST_EP}",
             headers=headers,
             params=params,
             timeout=10
         )
+        if response.status_code != 200:
+            error_msg = response.json().get("status", {}).get("error_message", "Unknown API error")
+            raise APIResponseError(error_msg)
+        
         data = response.json()
         
-        # TODO Add error handling
         price = data['data'][ticker]['quote'][currency_code]['price']
         return price
-    except requests.exceptions.RequestException as e:
-        raise APIResponseError(f"Network error: {str(e)}") from e
+    except requests.exceptions.RequestException as ex:
+        raise APIResponseError(f"{str(ex)}") from ex
+    except Exception as ex:
+        raise Exception(f"{str(ex)}") from ex
 
 def fetch_crypto_price_data(tickers, currency):
     """
@@ -53,30 +60,35 @@ def fetch_crypto_price_data(tickers, currency):
     Returns:
         - The API response formatted as a dict.
     """
-    api_key = _get_api_key()
-
-    headers = {
-        "Accepts": "application/json",
-        "X-CMC_PRO_API_KEY": api_key
-    }
-    params = {
-        "symbol": tickers,
-        "convert": currency.upper()
-    }
-
     try:
+        api_key = _get_api_key()
+
+        headers = {
+            "Accepts": "application/json",
+            "X-CMC_PRO_API_KEY": api_key
+        }
+        params = {
+            "symbol": tickers,
+            "convert": currency.upper()
+        }
+
         response = requests.get(
             f"{API_BASE}{API_LATEST_EP}",
             headers=headers,
             params=params,
             timeout=10
         )
-        data = response.json()
+
+        if response.status_code != 200:
+            error_msg = response.json().get("status", {}).get("error_message", "Unknown API error")
+            raise APIResponseError(error_msg)
         
-        # TODO Add error handling
+        data = response.json()
         return _parse_json_response(data, currency)
-    except requests.exceptions.RequestException as e:
-        raise APIResponseError(f"Network error: {str(e)}") from e
+    except requests.exceptions.RequestException as ex:
+        raise APIResponseError(f"{str(ex)}") from ex
+    except Exception as ex:
+        raise Exception(f"{str(ex)}") from ex
 
 def _get_api_key():
     """
@@ -86,8 +98,9 @@ def _get_api_key():
         - The CMC API key stored in the environment variable.
     """
     api_key = os.getenv(API_KEY_ENV_VAR)
-
-    # TODO Add error handling
+    if not api_key:
+        raise APIKeyError(f"Could not find CMC API key in the '{API_KEY_ENV_VAR}' env var")
+    
     return api_key
 
 def _parse_json_response(data, currency):

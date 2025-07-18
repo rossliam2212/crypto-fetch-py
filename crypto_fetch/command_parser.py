@@ -37,6 +37,8 @@ def main():
     convert_parser.add_argument("-f", "--file", help="Portfolio file (future feature)")
 
     args = parser.parse_args()
+
+    todays_date = date.today().strftime("%A, %B %d, %Y")
         
     if args.command == "price":
         # convert ticker input to a list
@@ -44,20 +46,25 @@ def main():
         # convert to comma-separated str
         tickers_str = ",".join(tickers)
 
-        print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}")
-        print(f"DATE: {date.today().strftime("%A, %B %d, %Y")}\n")
+        print(f"DATE: {todays_date}")
+        print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}\n")
 
-        data = fetch_crypto_price_data(tickers_str, args.currency)
-
-        # print formatted output
-        print(format_price_output(data, args.currency, args.verbose))
-
+        try:
+            data = fetch_crypto_price_data(tickers_str, args.currency)
+            # print formatted output
+            print(format_price_output(data, args.currency, args.verbose))
+        except Exception as ex:
+            print(f"[ERROR] {str(ex)}")
     elif args.command == "convert":
         amount_to_convert = args.amount
         ticker = args.ticker
 
-        print("CONVERTING...")
+        print(f"DATE: {todays_date}")
+        print("CONVERTING...\n")
 
-        price = fetch_crypto_price(ticker, args.currency)
-        converted_amount = amount_to_convert * price
-        print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
+        try:
+            price = fetch_crypto_price(ticker, args.currency)
+            converted_amount = amount_to_convert * price
+            print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
+        except Exception as ex:
+            print(f"[ERROR] {str(ex)}")
