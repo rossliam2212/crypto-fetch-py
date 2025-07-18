@@ -1,11 +1,11 @@
+from typing import Final
+
 # Base CMC API
-API_BASE = "https://pro-api.coinmarketcap.com/v1"
-API_LATEST_EP = "/cryptocurrency/quotes/latest"
+API_BASE: Final[str] = "https://pro-api.coinmarketcap.com/v1"
+API_LATEST_EP: Final[str] = "/cryptocurrency/quotes/latest"
 
 # Environment var CMC API is expected
-API_KEY_ENV_VAR = "COINMARKETCAP_API_KEY"
-
-DEFAULT_FIAT = "EUR"
+API_KEY_ENV_VAR: Final[str] = "COINMARKETCAP_API_KEY"
 
 # Map of all supported fiat currencies [code -> symbol]
 CURRENCY_SYMBOL_MAP = {

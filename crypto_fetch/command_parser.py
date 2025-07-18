@@ -1,5 +1,6 @@
 import argparse
 from datetime import date
+from typing import List
 
 from crypto_fetch.api_client import fetch_crypto_price_data
 from crypto_fetch.api_client import fetch_crypto_price
@@ -36,15 +37,15 @@ def main():
     convert_parser.add_argument("-c", "--currency", default="EUR", help="Currency (default: EUR)")
     convert_parser.add_argument("-f", "--file", help="Portfolio file (future feature)")
 
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
 
-    todays_date = date.today().strftime("%A, %B %d, %Y")
+    todays_date: str = date.today().strftime("%A, %B %d, %Y")
         
     if args.command == "price":
         # convert ticker input to a list
-        tickers = [t.strip().upper() for t in args.tickers.split(",")]
+        tickers: List[str] = [t.strip().upper() for t in args.tickers.split(",")]
         # convert to comma-separated str
-        tickers_str = ",".join(tickers)
+        tickers_str: str = ",".join(tickers)
 
         print(f"DATE: {todays_date}")
         print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}\n")
@@ -56,15 +57,15 @@ def main():
         except Exception as ex:
             print(f"[ERROR] {str(ex)}")
     elif args.command == "convert":
-        amount_to_convert = args.amount
-        ticker = args.ticker
+        amount_to_convert: float = args.amount
+        ticker: str = args.ticker
 
         print(f"DATE: {todays_date}")
         print("CONVERTING...\n")
 
         try:
-            price = fetch_crypto_price(ticker, args.currency)
-            converted_amount = amount_to_convert * price
+            price: float = fetch_crypto_price(ticker, args.currency)
+            converted_amount: float = amount_to_convert * price
             print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
         except Exception as ex:
             print(f"[ERROR] {str(ex)}")
