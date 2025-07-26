@@ -2,10 +2,13 @@ import argparse
 from datetime import date
 from typing import List
 
-from crypto_fetch.api_client import fetch_crypto_price_data
-from crypto_fetch.api_client import fetch_crypto_price
+from crypto_fetch.api_client import APIConfig
+from crypto_fetch.api_client import CoinMarketCapAPIClient
 from crypto_fetch.formatter import format_price_output
 from crypto_fetch.formatter import format_convert_output
+from crypto_fetch.constants import CMC_API_BASE
+from crypto_fetch.constants import CMC_API_LATEST_EP
+from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
 
 def main():
     """
@@ -40,6 +43,14 @@ def main():
     args: argparse.Namespace = parser.parse_args()
 
     todays_date: str = date.today().strftime("%A, %B %d, %Y")
+
+    # TODO Don't use a constant for the CMC API Config, just create it here... to avoid circular imports
+    cmc_api_config: APIConfig = APIConfig(
+        base_url=CMC_API_BASE,
+        latest_endpoint=CMC_API_LATEST_EP,
+        api_key_env_var=CMC_API_KEY_ENV_VAR
+    )
+    client = CoinMarketCapAPIClient(cmc_api_config)
         
     if args.command == "price":
         # convert ticker input to a list
@@ -48,23 +59,23 @@ def main():
         tickers_str: str = ",".join(tickers)
 
         print(f"DATE: {todays_date}")
-        print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}\n")
+        print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}...\n")
 
         try:
-            data = fetch_crypto_price_data(tickers_str, args.currency)
+            data = client.fetch_multiple_price_data(tickers_str, args.currency)
             # print formatted output
             print(format_price_output(data, args.currency, args.verbose))
         except Exception as ex:
             print(f"[ERROR] {str(ex)}")
     elif args.command == "convert":
         amount_to_convert: float = args.amount
-        ticker: str = args.ticker
+        ticker: str = args.ticker.upper()
 
         print(f"DATE: {todays_date}")
         print("CONVERTING...\n")
 
         try:
-            price: float = fetch_crypto_price(ticker, args.currency)
+            price: float = client.fetch_single_price_data(ticker, args.currency)
             converted_amount: float = amount_to_convert * price
             print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
         except Exception as ex:
