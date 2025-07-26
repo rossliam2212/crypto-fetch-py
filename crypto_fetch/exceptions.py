@@ -1,6 +1,8 @@
 class APIKeyError(Exception):
+    """ Exception for API key releated errors. """
+
     """
-    Exception for API key releated errors.
+    Constructs an APIKeyError exception.
 
     :param message: The exception message.
     """
@@ -12,12 +14,14 @@ class APIKeyError(Exception):
         return self.message
 
 class APIResponseError(Exception):
+    """ Exception for API response related errors. """
+
     """
-    Exception for API response related errors.
+    Constructs an APIResponseError exception.
 
     :param message: The exception message.
     """
-    def __init__(self, message: str, status_code: int):
+    def __init__(self, message: str):
         self.message = message
         super().__init__(message)
 

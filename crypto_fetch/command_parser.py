@@ -44,7 +44,6 @@ def main():
 
     todays_date: str = date.today().strftime("%A, %B %d, %Y")
 
-    # TODO Don't use a constant for the CMC API Config, just create it here... to avoid circular imports
     cmc_api_config: APIConfig = APIConfig(
         base_url=CMC_API_BASE,
         latest_endpoint=CMC_API_LATEST_EP,

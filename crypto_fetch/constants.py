@@ -1,7 +1,5 @@
 from typing import Final
 
-from crypto_fetch.api_client import APIConfig
-
 # Base CMC API
 CMC_API_BASE: Final[str] = "https://pro-api.coinmarketcap.com/v1"
 CMC_API_LATEST_EP: Final[str] = "/cryptocurrency/quotes/latest"
