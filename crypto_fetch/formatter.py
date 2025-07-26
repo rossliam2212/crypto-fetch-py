@@ -25,11 +25,11 @@ def format_price_output(data, currency_code: str, verbose: bool) -> str:
         price: float = data.get("price", 0)
         
         if currency_symbol == "$" or currency_symbol == "¥":
-            base_line: str = f"🔹 ${ticker}: {currency_symbol}{price:.2f} ({currency_code})"
+            base_line: str = f"🔹 ${ticker}: {currency_symbol}{price:.4f} ({currency_code})"
         elif currency_code in CURRENCY_CODE_ONLY_MAP:
-            base_line: str = f"🔹 ${ticker}: {price:.2f}{currency_symbol} ({currency_code})"
+            base_line: str = f"🔹 ${ticker}: {price:.4f}{currency_symbol} ({currency_code})"
         else:
-            base_line: str = f"🔹 ${ticker}: {currency_symbol}{price}"
+            base_line: str = f"🔹 ${ticker}: {currency_symbol}{price:.4f}"
 
         if not verbose:
             # base output
