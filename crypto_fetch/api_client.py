@@ -22,7 +22,29 @@ class BaseAPIClient(ABC, Generic[T]):
 
     def __init__(self, config: APIConfig):
         self.config = config
-        super().__init__()
+
+    @abstractmethod
+    def _get_request_headers(self, api_key: str) -> Dict[str, str]:
+        """
+        Gets the headers for a reqest to the API.
+        
+        :param api_key: The API key.
+
+        :return: A dict containing the requst headers.
+        """
+        pass
+
+    @abstractmethod
+    def _get_request_params(self, tickers: str, currency_code: str) -> Dict[str, str]:
+        """
+        Gets the paramters for a request to the API.
+
+        :param tickers: A single / comma-separted list of tickers as a str.
+        :param currency_code: The fiat currrency code.
+
+        :return: A dict containing the request parameters.
+        """
+        pass
 
     @abstractmethod
     def _parse_json_response(self, data: Dict[str, Any], currency_code: str) -> T:
@@ -88,14 +110,8 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         """
         try:
             api_key: str = self._get_api_key()
-            headers: Dict[str, str] = {
-                "Accepts": "application/json",
-                "X-CMC_PRO_API_KEY": api_key
-            }
-            params = {
-                "symbol": ticker,
-                "convert": currency_code.upper()
-            }
+            headers: Dict[str, str] = self._get_request_headers(api_key)
+            params: Dict[str, str] = self._get_request_params(ticker, currency_code)
 
             data = self._make_request(headers, params)
             return data['data'][ticker]['quote'][currency_code.upper()]['price']
@@ -114,18 +130,41 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         """
         try:
             api_key: str = self._get_api_key()
-            headers = {
-                "Accepts": "application/json",
-                "X-CMC_PRO_API_KEY": api_key
-            }
-            params = {
-                "symbol": tickers,
-                "convert": currency_code.upper()
-            }
+            headers: Dict[str, str] = self._get_request_headers(api_key)
+            params: Dict[str, str] = self._get_request_params(tickers, currency_code)
+
             data = self._make_request(headers, params)
             return self._parse_json_response(data, currency_code)
         except Exception as ex:
             raise Exception(f"{str(ex)}")
+        
+
+    def _get_request_headers(self, api_key: str) -> Dict[str, str]:
+        """
+        Gets the headers for a reqest to the CMC API.
+        
+        :param api_key: The CMC API key.
+
+        :return: A dict containing the request headers.
+        """
+        return {
+            "Accepts": "application/json",
+            "X-CMC_PRO_API_KEY": api_key
+        }
+    
+    def _get_request_params(self, tickers: str, currency_code: str) -> Dict[str, str]:
+        """
+        Gets the paramters for a request to the CMC API.
+        
+        :param tickers: A single / comma-separted list of tickers as a str.
+        :param currency_code: The fiat currrency code.
+
+        :return: A dict containing the request parameters.
+        """
+        return {
+            "symbol": tickers,
+            "convert": currency_code.upper()
+        }
     
     def _parse_json_response(self, data: Dict[str, Any], currency_code: str) -> Dict[str, Dict[str, float]]:
         """
