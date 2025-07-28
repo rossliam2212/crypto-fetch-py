@@ -58,7 +58,7 @@ def main():
         tickers_str: str = ",".join(tickers)
 
         print(f"DATE: {todays_date}")
-        print(f"FETCHING PRICE DATA FOR TICKER(S): {tickers_str}...\n")
+        print(f"FETCHING PRICE DATA FOR TICKER(S): {_add_dollar_symbol_to_tickers(tickers)}...\n")
 
         try:
             data = client.fetch_multiple_price_data(tickers_str, args.currency)
@@ -79,3 +79,13 @@ def main():
             print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
         except Exception as ex:
             print(f"[ERROR] {str(ex)}")
+
+def _add_dollar_symbol_to_tickers(tickers: List[str]) -> str:
+    """
+    Prefixes each ticker symbol in a given list with a '$'.
+
+    :param tickers: The list of tickers symbols.
+
+    :return: A comma separated string of tickers with the '$' prefix.
+    """
+    return ",".join(f"${ticker}" for ticker in tickers)
