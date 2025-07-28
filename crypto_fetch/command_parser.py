@@ -86,6 +86,6 @@ def _add_dollar_symbol_to_tickers(tickers: List[str]) -> str:
 
     :param tickers: The list of tickers symbols.
 
-    :return: A comma separated string of tickers with the '$' prefix.
+    :return: A comma separated str of tickers with the '$' prefix.
     """
     return ",".join(f"${ticker}" for ticker in tickers)

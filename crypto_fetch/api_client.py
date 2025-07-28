@@ -7,19 +7,18 @@ from abc import ABC, abstractmethod
 from crypto_fetch.exceptions import APIKeyError
 from crypto_fetch.exceptions import APIResponseError
 
-# ==========================================
 T = TypeVar('T')
 
 @dataclass
 class APIConfig:
-    """Config for API endpoints"""
+    """Config for API endpoints."""
 
     base_url: str
     latest_endpoint: str
     api_key_env_var: str
 
 class BaseAPIClient(ABC, Generic[T]):
-    """Base class for API clients"""
+    """Base class for API clients."""
 
     def __init__(self, config: APIConfig):
         self.config = config
@@ -44,7 +43,7 @@ class BaseAPIClient(ABC, Generic[T]):
         :param params: The request parameters.
 
         :return: The JSON from the API.
-        :raises APIResponseError: If an error occurs fetching the response form the API.
+        :raises APIResponseError: If an error occurs fetching the response from the API.
         """
         try:
             response: requests.Response = requests.get(
@@ -64,9 +63,9 @@ class BaseAPIClient(ABC, Generic[T]):
 
     def _get_api_key(self) -> str:
         """
-        Gets the CMC API key stored in the 'COINMARKETCAP_API_KEY' environment variable.
+        Gets the API key stored in the environment variable.
 
-        :return: The CMC API key stored in the environment variable.
+        :return: The API key.
         :raises APIKeyError: If the API is not found.
         """
         api_key = os.getenv(self.config.api_key_env_var)
@@ -75,11 +74,11 @@ class BaseAPIClient(ABC, Generic[T]):
         return api_key
     
 class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
-    """Impl of the BaseAPIClient class for the CoinMarketCap API"""
+    """Impl of the BaseAPIClient class for the CoinMarketCap API."""
 
     def fetch_single_price_data(self, ticker: str, currency_code: str) -> float:
         """
-        Fetches the price data for a single cryptocurrency
+        Fetches the price data for a single cryptocurrency.
 
         :param ticker: The ticker of the cryptocurrency.
         :param currency_code: The code of the fiat currency to fetch the data in.
