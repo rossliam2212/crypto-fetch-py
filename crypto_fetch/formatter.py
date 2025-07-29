@@ -4,12 +4,13 @@ from typing import List
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
 
-def format_price_output(data, currency_code: str, verbose: bool) -> str:
+def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -> str:
     """
     Formats the cryptocurrency price data received from the CMC API.
 
     :param data: The data received from the CMC API formatted.
     :param currency_code: The fiat currency code.
+    :param api_url: The API URL.
     :verbose: Whether or not the output should be verbose.
 
     :returns: Formatted output string.
@@ -49,6 +50,7 @@ def format_price_output(data, currency_code: str, verbose: bool) -> str:
 
         volume_24hr: str = data.get("24h_volume", 0)
 
+        verbose_details.append(f"\n[data fetched from '{api_url}']")
         output.append(f"{base_line}\n  " + "\n  ".join(verbose_details))
 
     return "\n".join(output)

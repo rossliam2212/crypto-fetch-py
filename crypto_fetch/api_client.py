@@ -13,6 +13,7 @@ T = TypeVar('T')
 class APIConfig:
     """Config for API endpoints."""
 
+    name: str
     base_url: str
     latest_endpoint: str
     api_key_env_var: str

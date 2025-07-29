@@ -7,6 +7,7 @@ from crypto_fetch.api_client import BaseAPIClient
 from crypto_fetch.api_client import CoinMarketCapAPIClient
 from crypto_fetch.formatter import format_price_output
 from crypto_fetch.formatter import format_convert_output
+from crypto_fetch.constants import CMC_API_NAME
 from crypto_fetch.constants import CMC_API_BASE
 from crypto_fetch.constants import CMC_API_LATEST_EP
 from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
@@ -46,6 +47,7 @@ def main():
     args: argparse.Namespace = parser.parse_args()
 
     cmc_api_config: APIConfig = APIConfig(
+        name=CMC_API_NAME,
         base_url=CMC_API_BASE,
         latest_endpoint=CMC_API_LATEST_EP,
         api_key_env_var=CMC_API_KEY_ENV_VAR
@@ -72,10 +74,10 @@ def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
 
     print(f"FETCHING PRICE DATA FOR TICKER(S): {_add_dollar_symbol_to_tickers(tickers)}...")
     if args.date:
-        print(f"Timestamp: {_get_date()}\n")
+        print(f"Timestamp: {_get_date()}")
 
     data = client.fetch_multiple_price_data(tickers_str, args.currency)
-    print(format_price_output(data, args.currency, args.verbose))
+    print(format_price_output(data, args.currency, client.config.base_url, args.verbose))
 
 def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     """

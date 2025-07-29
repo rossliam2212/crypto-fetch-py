@@ -1,6 +1,7 @@
 from typing import Final
 
 # Base CMC API
+CMC_API_NAME: Final[str] = "CoinMarketCap"
 CMC_API_BASE: Final[str] = "https://pro-api.coinmarketcap.com/v1"
 CMC_API_LATEST_EP: Final[str] = "/cryptocurrency/quotes/latest"
 # Environment var CMC API is expected
