@@ -37,3 +37,6 @@ CURRENCY_CODE_ONLY_MAP = {
     "SEK": " kr", # Swedish Krona
     "HUF": "Ft"   # Hungarian Forint
 }
+
+BOLD_OUTPUT = "\033[1m"
+RESET_OUTPUT = "\033[0m"

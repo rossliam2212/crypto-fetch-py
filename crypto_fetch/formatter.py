@@ -3,6 +3,8 @@ from typing import List
 
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
+from crypto_fetch.constants import BOLD_OUTPUT
+from crypto_fetch.constants import RESET_OUTPUT
 
 def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -> str:
     """
@@ -35,6 +37,7 @@ def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -
         verbose_details: List[str] = _get_verbose_price_output(data, currency_code, api_url)
         output.append(f"{base_line}\n  " + "\n  ".join(verbose_details))
 
+    output.append(f"\n[data fetched from '{api_url}']")
     return "\n".join(output)
 
 def _get_base_price_output(price: float, ticker: str, currency_symbol: str, currency_code: str) -> str:
@@ -50,19 +53,18 @@ def _get_base_price_output(price: float, ticker: str, currency_symbol: str, curr
     :return: The base output as a str.
     """
     if currency_symbol == "$" or currency_symbol == "¥":
-        return f"🔹 ${ticker}: {currency_symbol}{price:.4f} ({currency_code})"
+        return f"🔹 ${ticker}: {BOLD_OUTPUT}{currency_symbol}{price:.4f}{RESET_OUTPUT} ({currency_code})"
     elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        return f"🔹 ${ticker}: {price:.4f}{currency_symbol} ({currency_code})"
+        return f"🔹 ${ticker}: {BOLD_OUTPUT}{price:.4f}{currency_symbol}{RESET_OUTPUT} ({currency_code})"
     else:
-        return f"🔹 ${ticker}: {currency_symbol}{price:.4f}"
+        return f"🔹 ${ticker}: {BOLD_OUTPUT}{currency_symbol}{price:.4f}{RESET_OUTPUT}"
     
-def _get_verbose_price_output(data, currency_code: str, api_url: str) -> List[str]:
+def _get_verbose_price_output(data, currency_code: str) -> List[str]:
     """
     Gets the verbose output for a cryptocurrency.
 
     :param data: The parsed data received from the API.
     :param currency_code: The fiat currency code.
-    :param api_url: The API URL.
 
     :return: The verbose out as a list of strs.
     """
@@ -75,8 +77,8 @@ def _get_verbose_price_output(data, currency_code: str, api_url: str) -> List[st
 
     verbose_details.append(f"\t> 1hr Change: {_format_percentage_change(change_1hr)}")
     verbose_details.append(f"\t> 24hr Change: {_format_percentage_change(change_24hr)}")
+    verbose_details.append(f"\t> 24hr Volume: {_format_large_number(volume_24hr, currency_code)}")
     verbose_details.append(f"\t> Market Cap: {_format_large_number(market_cap, currency_code)}")
-    verbose_details.append(f"\n[data fetched from '{api_url}']")
 
     return verbose_details
 
@@ -95,11 +97,11 @@ def format_convert_output(ticker: str, currency_code: str, amount_to_convert: fl
     currency_symbol: str = _get_currency_symbol(currency_code)
 
     if currency_symbol == "$" or currency_symbol == "¥":
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {currency_symbol}{converted_amount} ({currency_code})"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{currency_symbol}{converted_amount:.4f}{RESET_OUTPUT} ({currency_code})"
     elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {converted_amount}{currency_symbol} ({currency_code})"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{converted_amount:.4f}{currency_symbol}{RESET_OUTPUT} ({currency_code})"
     else:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {currency_symbol}{converted_amount}"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{currency_symbol}{converted_amount:.4f}{RESET_OUTPUT}"
 
     return output
 
