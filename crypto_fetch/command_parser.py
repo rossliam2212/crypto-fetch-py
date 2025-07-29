@@ -95,6 +95,11 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
 
 def _get_date() -> str:
+    """
+    Gets the current date/time in the following format: 2025-07-29 21:07:00.
+
+    :return: The current date/time as a str.
+    """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def _add_dollar_symbol_to_tickers(tickers: List[str]) -> str:
