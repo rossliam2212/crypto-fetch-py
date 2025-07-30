@@ -8,7 +8,7 @@ from crypto_fetch.constants import RESET_OUTPUT
 
 def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -> str:
     """
-    Formats the cryptocurrency price data received from the CMC API.
+    Formats the cryptocurrency price data received from the API.
 
     :param data: The parsed data received from the API.
     :param currency_code: The fiat currency code.
@@ -34,10 +34,12 @@ def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -
             continue
         
         # verbose output
-        verbose_details: List[str] = _get_verbose_price_output(data, currency_code, api_url)
+        verbose_details: List[str] = _get_verbose_price_output(data, currency_code)
         output.append(f"{base_line}\n  " + "\n  ".join(verbose_details))
 
-    output.append(f"\n[data fetched from '{api_url}']")
+    if verbose:
+        output.append(f"\n[data fetched from '{api_url}']")
+
     return "\n".join(output)
 
 def _get_base_price_output(price: float, ticker: str, currency_symbol: str, currency_code: str) -> str:
