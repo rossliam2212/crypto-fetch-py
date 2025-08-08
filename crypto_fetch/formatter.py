@@ -5,6 +5,8 @@ from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
 from crypto_fetch.constants import BOLD_OUTPUT
 from crypto_fetch.constants import RESET_OUTPUT
+from crypto_fetch.constants import RED_OUTPUT
+from crypto_fetch.constants import GREEN_OUTPUT
 
 def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -> str:
     """
@@ -77,10 +79,10 @@ def _get_verbose_price_output(data, currency_code: str) -> List[str]:
     market_cap: str = data.get("market_cap", 0)
     volume_24hr: str = data.get("24h_volume", 0)
 
-    verbose_details.append(f"\t> 1hr Change: {_format_percentage_change(change_1hr)}")
+    verbose_details.append(f"\t> 1hr Change:  {_format_percentage_change(change_1hr)}")
     verbose_details.append(f"\t> 24hr Change: {_format_percentage_change(change_24hr)}")
     verbose_details.append(f"\t> 24hr Volume: {_format_large_number(volume_24hr, currency_code)}")
-    verbose_details.append(f"\t> Market Cap: {_format_large_number(market_cap, currency_code)}")
+    verbose_details.append(f"\t> Market Cap:  {_format_large_number(market_cap, currency_code)}")
 
     return verbose_details
 
@@ -141,9 +143,9 @@ def _format_percentage_change(change: float) -> str:
     :returns: The formatted percentage str.
     """
     if change > 0:
-        return f"▲ {change:.2f}%"
+        return f"{GREEN_OUTPUT}▲{RESET_OUTPUT} {change:.2f}%"
     elif change < 0:
-        return f"▼ {change:.2f}%"
+        return f"{RED_OUTPUT}▼{RESET_OUTPUT} {change:.2f}%"
     else:
         return f"{change:.2f}%"
 
