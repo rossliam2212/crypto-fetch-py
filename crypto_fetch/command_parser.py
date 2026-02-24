@@ -11,6 +11,7 @@ from crypto_fetch.constants import CMC_API_NAME
 from crypto_fetch.constants import CMC_API_BASE
 from crypto_fetch.constants import CMC_API_LATEST_EP
 from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
+from crypto_fetch.constants import CMC_API_KEY_FILE_LOCATION
 
 def main():
     """
@@ -50,7 +51,8 @@ def main():
         name=CMC_API_NAME,
         base_url=CMC_API_BASE,
         latest_endpoint=CMC_API_LATEST_EP,
-        api_key_env_var=CMC_API_KEY_ENV_VAR
+        api_key_env_var=CMC_API_KEY_ENV_VAR,
+        api_key_file=CMC_API_KEY_FILE_LOCATION
     )
     client = CoinMarketCapAPIClient(cmc_api_config)
 

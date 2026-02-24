@@ -6,6 +6,7 @@ CMC_API_BASE: Final[str] = "https://pro-api.coinmarketcap.com/v1"
 CMC_API_LATEST_EP: Final[str] = "/cryptocurrency/quotes/latest"
 # Environment var CMC API is expected
 CMC_API_KEY_ENV_VAR: Final[str] = "COINMARKETCAP_API_KEY"
+CMC_API_KEY_FILE_LOCATION: Final[str] = "/var/tmp/cmc_api_key.txt"
 
 # Map of all supported fiat currencies [code -> symbol]
 CURRENCY_SYMBOL_MAP = {

@@ -17,6 +17,7 @@ class APIConfig:
     base_url: str
     latest_endpoint: str
     api_key_env_var: str
+    api_key_file: str
 
 class BaseAPIClient(ABC, Generic[T]):
     """Base class for API clients."""
@@ -92,9 +93,16 @@ class BaseAPIClient(ABC, Generic[T]):
         :raises APIKeyError: If the API is not found.
         """
         api_key = os.getenv(self.config.api_key_env_var)
-        if not api_key:
-            raise APIKeyError(f"Could not find API key in '{self.config.api_key_env_var}'")
-        return api_key
+        if api_key:
+            return api_key
+        
+        if os.path.isfile(self.config.api_key_file):
+            with open(self.config.api_key_file, "r") as api_key_file:
+                api_key = api_key_file.read()
+
+        if api_key:
+            return api_key.strip()
+        raise APIKeyError(f"Could not find API key in '{self.config.api_key_env_var}' or '{self.config.api_key_file}'")
     
 class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
     """Impl of the BaseAPIClient class for the CoinMarketCap API."""
@@ -187,6 +195,7 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
                 "price": float(quote.get("price", 0)),
                 "1h_change": float(quote.get("percent_change_1h", 0)),
                 "24h_change": float(quote.get("percent_change_24h", 0)),
+                "7d_change": float(quote.get("percent_change_7d", 0)),
                 "market_cap": float(quote.get("market_cap", 0)),
                 "24h_volume": float(quote.get("volume_24h", 0)),
         }
