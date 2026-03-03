@@ -7,6 +7,9 @@ from crypto_fetch.constants import BOLD_OUTPUT
 from crypto_fetch.constants import RESET_OUTPUT
 from crypto_fetch.constants import RED_OUTPUT
 from crypto_fetch.constants import GREEN_OUTPUT
+from crypto_fetch.constants import PRECISION_HIGH
+from crypto_fetch.constants import PRECISION_MEDIUM
+from crypto_fetch.constants import PRECISION_LOW
 
 def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
     """
@@ -26,8 +29,8 @@ def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, a
     currency_code: str = currency_code.upper()
     currency_symbol: str = _get_currency_symbol(currency_code)
 
-    for ticker, data in data.items():
-        price: float = data.get("price", 0)
+    for ticker, ticker_data in data.items():
+        price: float = ticker_data.get("price", 0)
         base_line: str = _get_base_price_output(price, ticker, currency_symbol, currency_code)
 
         if not verbose:
@@ -36,7 +39,7 @@ def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, a
             continue
         
         # verbose output
-        verbose_details: List[str] = _get_verbose_price_output(data, currency_code)
+        verbose_details: List[str] = _get_verbose_price_output(ticker_data, currency_code)
         output.append(f"{base_line}\n  " + "\n  ".join(verbose_details))
 
     if verbose:
@@ -74,11 +77,11 @@ def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> Lis
     """
     verbose_details: List[str] = []
 
-    change_1hr: str = data.get("1h_change", 0)
-    change_24hr: str = data.get("24h_change", 0)
-    change_7d: str = data.get("7d_change", 0)
-    market_cap: str = data.get("market_cap", 0)
-    volume_24hr: str = data.get("24h_volume", 0)
+    change_1hr: float = data.get("1h_change", 0)
+    change_24hr: float = data.get("24h_change", 0)
+    change_7d: float = data.get("7d_change", 0)
+    market_cap: float = data.get("market_cap", 0)
+    volume_24hr: float = data.get("24h_volume", 0)
 
     verbose_details.append(f"\t> 1hr Change:  {_format_percentage_change(change_1hr)}")
     verbose_details.append(f"\t> 24hr Change: {_format_percentage_change(change_24hr)}")
@@ -127,11 +130,11 @@ def _format_large_number(number: float, currency_code: str) -> str:
     scaled: float = number / (10 ** (3 * magnitude))
     
     if scaled < 10:
-        precision = 2
+        precision = PRECISION_MEDIUM
     elif scaled < 100:
-        precision = 1
+        precision = PRECISION_MEDIUM
     else:
-        precision = 0
+        precision = PRECISION_LOW
     
     return f"{scaled:,.{precision}f}{unit} ({currency_code})"
 

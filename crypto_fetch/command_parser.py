@@ -42,7 +42,7 @@ def main():
 
     # convert command
     convert_parser = subparser.add_parser("convert", help="Convert fiat to crypto")
-    convert_parser.add_argument("amount", type=float, help="Amount to convert")
+    convert_parser.add_argument("amount", type=_validate_positive_amount, help="Amount to convert")
     convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
     convert_parser.add_argument("-c", "--currency", default="EUR", help="Currency (default: EUR)")
     convert_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
@@ -50,13 +50,7 @@ def main():
 
     args: argparse.Namespace = parser.parse_args()
 
-    cmc_api_config: APIConfig = APIConfig(
-        name=CMC_API_NAME,
-        base_url=CMC_API_BASE,
-        latest_endpoint=CMC_API_LATEST_EP,
-        api_key_env_var=CMC_API_KEY_ENV_VAR,
-        api_key_file=CMC_API_KEY_FILE_LOCATION
-    )
+    cmc_api_config: APIConfig = _create_cmc_config()
     client = CoinMarketCapAPIClient(cmc_api_config)
 
     try:
@@ -101,6 +95,36 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     price: float = client.fetch_single_price_data(ticker, args.currency)
     converted_amount: float = amount_to_convert * price
     print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
+
+def _validate_positive_amount(value: str) -> float:
+    """
+    Validates the amount supplied for the convert command is positive.
+
+    :param value: The amount supplied to the convert command.
+
+    :return: the amount supplied converted to a float.
+    """
+    try:
+        amount = float(value)
+        if (amount <= 0):
+            raise argparse.ArgumentTypeError(f"Amount must be positive. Supplied: '{amount}'")
+        return amount
+    except:
+        raise argparse.ArgumentTypeError(f"Invalid amount supplied: '{value}'")
+    
+def _create_cmc_config() -> APIConfig:
+    """
+    Creates the default CoinMarketCap API configuration.
+
+    :return: the defailt CoinMarketCap API configuration.
+    """
+    return APIConfig(
+        name=CMC_API_NAME,
+        base_url=CMC_API_BASE,
+        latest_endpoint=CMC_API_LATEST_EP,
+        api_key_env_var=CMC_API_KEY_ENV_VAR,
+        api_key_file=CMC_API_KEY_FILE_LOCATION
+    )
 
 def _get_date() -> str:
     """

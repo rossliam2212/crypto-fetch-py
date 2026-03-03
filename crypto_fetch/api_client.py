@@ -27,7 +27,7 @@ class BaseAPIClient(ABC, Generic[T]):
     @abstractmethod
     def _get_request_headers(self, api_key: str) -> Dict[str, str]:
         """
-        Gets the headers for a reqest to the API.
+        Gets the headers for a request to the API.
         
         :param api_key: The API key.
 
@@ -41,7 +41,7 @@ class BaseAPIClient(ABC, Generic[T]):
         Gets the paramters for a request to the API.
 
         :param tickers: A single / comma-separted list of tickers as a str.
-        :param currency_code: The fiat currrency code.
+        :param currency_code: The fiat currency code.
 
         :return: A dict containing the request parameters.
         """
@@ -66,7 +66,7 @@ class BaseAPIClient(ABC, Generic[T]):
         :param params: The request parameters.
 
         :return: The JSON from the API.
-        :raises APIResponseError: If an error occurs fetching the response from the API.
+        :raises APIError: If an error occurs fetching the response from the API.
         """
         try:
             response: requests.Response = requests.get(
@@ -89,7 +89,7 @@ class BaseAPIClient(ABC, Generic[T]):
         Gets the API key stored in the environment variable.
 
         :return: The API key.
-        :raises APIKeyError: If the API is not found.
+        :raises APIError: If the API is not found.
         """
         api_key = os.getenv(self.config.api_key_env_var)
         if api_key:
@@ -99,11 +99,14 @@ class BaseAPIClient(ABC, Generic[T]):
             with open(self.config.api_key_file, "r", encoding="utf-8") as api_key_file:
                 api_key = api_key_file.read().strip()
                 if api_key:
-                    return api_key.strip()
+                    return api_key
         else:
             os.makedirs(os.path.dirname(self.config.api_key_file), exist_ok=True)
-            open(self.config.api_key_file, "w").close()
-        raise APIError(f"Could not find API key in '{self.config.api_key_env_var}' or '{self.config.api_key_file}'")
+            with open(self.config.api_key_file, "w") as api_key_file:
+                pass
+
+        raise APIError(f"API key not found. Please set '{self.config.api_key_env_var}' " 
+                       f"env variable or add key to '{self.config.api_key_file}'")
     
 class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
     """Impl of the BaseAPIClient class for the CoinMarketCap API."""
@@ -164,7 +167,7 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
     
     def _get_request_params(self, tickers: str, currency_code: str) -> Dict[str, str]:
         """
-        Gets the paramters for a request to the CMC API.
+        Gets the parameters for a request to the CMC API.
         
         :param tickers: A single / comma-separted list of tickers as a str.
         :param currency_code: The fiat currrency code.
@@ -180,7 +183,7 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         """
         Parses the JSON response received from the CMC API into a dict.
 
-        :param data: The JSON reponse.
+        :param data: The JSON response.
         :param currency_code: The code of the fiat currency (e.g. EUR).
 
         :return: The JSON response parsed as a dict.
