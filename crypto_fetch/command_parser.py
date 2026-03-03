@@ -29,7 +29,7 @@ def main():
         $ crypto-fetch convert 1000 --ticker XRP --currency CAD
     """
     just_fix_windows_console()
-    
+
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
     subparser = parser.add_subparsers(dest="command", required=True)
 
@@ -94,6 +94,7 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     amount_to_convert: float = args.amount
     ticker: str = args.ticker.upper()
 
+    print(f"CONVERTING {amount_to_convert} ${ticker} to {args.currency}...")
     if args.date:
         print(f"Timestamp: {_get_date()}")
 

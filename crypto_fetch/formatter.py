@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import Dict, List
 
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
@@ -8,7 +8,7 @@ from crypto_fetch.constants import RESET_OUTPUT
 from crypto_fetch.constants import RED_OUTPUT
 from crypto_fetch.constants import GREEN_OUTPUT
 
-def format_price_output(data, currency_code: str, api_url: str, verbose: bool) -> str:
+def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
     """
     Formats the cryptocurrency price data received from the API.
 
@@ -63,7 +63,7 @@ def _get_base_price_output(price: float, ticker: str, currency_symbol: str, curr
     else:
         return f"🔹 ${ticker}: {BOLD_OUTPUT}{currency_symbol}{price:.4f}{RESET_OUTPUT}"
     
-def _get_verbose_price_output(data, currency_code: str) -> List[str]:
+def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> List[str]:
     """
     Gets the verbose output for a cryptocurrency.
 

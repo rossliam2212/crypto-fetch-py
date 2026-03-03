@@ -1,0 +1,3 @@
+.venv/
+.idea/
+crypto_fetch/__pycache__/

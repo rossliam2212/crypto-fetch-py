@@ -4,8 +4,7 @@ from typing import Dict, Any, TypeVar, Generic
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
-from crypto_fetch.exceptions import APIKeyError
-from crypto_fetch.exceptions import APIResponseError
+from crypto_fetch.exceptions import APIError
 
 T = TypeVar('T')
 
@@ -79,11 +78,11 @@ class BaseAPIClient(ABC, Generic[T]):
 
             if response.status_code != 200:
                 error_msg = response.json().get("status", {}).get("error_message", "Unknown API error")
-                raise APIResponseError(error_msg)
+                raise APIError(error_msg)
             
             return response.json()
         except Exception as ex:
-            raise APIResponseError(f"{str(ex)}") from ex
+            raise APIError(f"{str(ex)}") from ex
 
     def _get_api_key(self) -> str:
         """
@@ -104,7 +103,7 @@ class BaseAPIClient(ABC, Generic[T]):
         else:
             os.makedirs(os.path.dirname(self.config.api_key_file), exist_ok=True)
             open(self.config.api_key_file, "w").close()
-        raise APIKeyError(f"Could not find API key in '{self.config.api_key_env_var}' or '{self.config.api_key_file}'")
+        raise APIError(f"Could not find API key in '{self.config.api_key_env_var}' or '{self.config.api_key_file}'")
     
 class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
     """Impl of the BaseAPIClient class for the CoinMarketCap API."""
