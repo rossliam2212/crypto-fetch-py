@@ -94,14 +94,16 @@ class BaseAPIClient(ABC, Generic[T]):
         """
         api_key = os.getenv(self.config.api_key_env_var)
         if api_key:
-            return api_key
+            return api_key.strip()
         
         if os.path.isfile(self.config.api_key_file):
-            with open(self.config.api_key_file, "r") as api_key_file:
-                api_key = api_key_file.read()
-
-        if api_key:
-            return api_key.strip()
+            with open(self.config.api_key_file, "r", encoding="utf-8") as api_key_file:
+                api_key = api_key_file.read().strip()
+                if api_key:
+                    return api_key.strip()
+        else:
+            os.makedirs(os.path.dirname(self.config.api_key_file), exist_ok=True)
+            open(self.config.api_key_file, "w").close()
         raise APIKeyError(f"Could not find API key in '{self.config.api_key_env_var}' or '{self.config.api_key_file}'")
     
 class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
