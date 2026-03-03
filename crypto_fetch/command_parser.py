@@ -1,4 +1,5 @@
 import argparse
+from colorama import just_fix_windows_console
 from datetime import datetime
 from typing import List
 
@@ -27,6 +28,8 @@ def main():
         $ crypto-fetch convert 50 -t BTC
         $ crypto-fetch convert 1000 --ticker XRP --currency CAD
     """
+    just_fix_windows_console()
+    
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
     subparser = parser.add_subparsers(dest="command", required=True)
 

@@ -1,3 +1,4 @@
+from colorama import Fore, Style
 from pathlib import Path
 from typing import Final
 
@@ -40,7 +41,7 @@ CURRENCY_CODE_ONLY_MAP = {
     "HUF": "Ft"   # Hungarian Forint
 }
 
-RED_OUTPUT = "\033[31m"
-GREEN_OUTPUT = "\033[32m"
-BOLD_OUTPUT = "\033[1m"
-RESET_OUTPUT = "\033[0m"
+RED_OUTPUT = Fore.RED
+GREEN_OUTPUT = Fore.GREEN
+BOLD_OUTPUT = Style.BRIGHT
+RESET_OUTPUT = Style.RESET_ALL
