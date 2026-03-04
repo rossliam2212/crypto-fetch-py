@@ -1,4 +1,5 @@
 import argparse
+import logging
 from colorama import just_fix_windows_console
 from datetime import datetime
 from typing import List
@@ -13,6 +14,9 @@ from crypto_fetch.constants import CMC_API_BASE
 from crypto_fetch.constants import CMC_API_LATEST_EP
 from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
 from crypto_fetch.constants import CMC_API_KEY_FILE_LOCATION
+from crypto_fetch.logger import setup_logger
+
+logger = logging.getLogger("crypto_fetch")
 
 def main():
     """
@@ -31,6 +35,7 @@ def main():
     just_fix_windows_console()
 
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     subparser = parser.add_subparsers(dest="command", required=True)
 
     # price subcommand
@@ -50,6 +55,9 @@ def main():
 
     args: argparse.Namespace = parser.parse_args()
 
+    setup_logger(args.debug)
+    logger.debug("Debugs logs enabled")
+
     cmc_api_config: APIConfig = _create_cmc_config()
     client = CoinMarketCapAPIClient(cmc_api_config)
 
@@ -59,7 +67,7 @@ def main():
         elif args.command == "convert":
             _handle_convert_command(args, client)
     except Exception as ex:
-        print(f"[ERROR] {str(ex)}")
+        logger.error(f"{str(ex)}")
 
 def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -71,12 +79,12 @@ def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     tickers: List[str] = [t.strip().upper() for t in args.tickers.split(",")]
     tickers_str: str = ",".join(tickers) # convert to comma-separated str
 
-    print(f"FETCHING PRICE DATA FOR TICKER(S): {_add_dollar_symbol_to_tickers(tickers)}...")
+    logger.info(f"FETCHING PRICE DATA FOR TICKER(S): {_add_dollar_symbol_to_tickers(tickers)}...")
     if args.date:
-        print(f"Timestamp: {_get_date()}")
+        logger.info(f"Timestamp: {_get_date()}")
 
     data = client.fetch_multiple_price_data(tickers_str, args.currency)
-    print(format_price_output(data, args.currency, client.config.base_url, args.verbose))
+    logger.info(format_price_output(data, args.currency, client.config.base_url, args.verbose))
 
 def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -88,13 +96,13 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     amount_to_convert: float = args.amount
     ticker: str = args.ticker.upper()
 
-    print(f"CONVERTING {amount_to_convert} ${ticker} to {args.currency}...")
+    logger.info(f"CONVERTING {amount_to_convert} ${ticker} to {args.currency}...")
     if args.date:
-        print(f"Timestamp: {_get_date()}")
+        logger.info(f"Timestamp: {_get_date()}")
 
     price: float = client.fetch_single_price_data(ticker, args.currency)
     converted_amount: float = amount_to_convert * price
-    print(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
+    logger.info(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
 
 def _validate_positive_amount(value: str) -> float:
     """

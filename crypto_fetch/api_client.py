@@ -1,4 +1,5 @@
 import os
+import logging
 import requests
 from typing import Dict, Any, TypeVar, Generic
 from dataclasses import dataclass
@@ -7,6 +8,7 @@ from abc import ABC, abstractmethod
 from crypto_fetch.exceptions import APIError
 
 T = TypeVar('T')
+logger = logging.getLogger("crypto_fetch")
 
 @dataclass
 class APIConfig:
@@ -98,8 +100,11 @@ class BaseAPIClient(ABC, Generic[T]):
         :raises APIError: If an error occurs fetching the response from the API.
         """
         try:
+            request_url = f"{self.config.base_url}{self.config.latest_endpoint}"
+            logger.debug(f"Making request to: '{request_url}'")
+
             response: requests.Response = requests.get(
-                f"{self.config.base_url}{self.config.latest_endpoint}",
+                url=request_url,
                 headers=headers,
                 params=params,
                 timeout=10
@@ -109,6 +114,7 @@ class BaseAPIClient(ABC, Generic[T]):
                 error_msg = response.json().get("status", {}).get("error_message", "Unknown API error")
                 raise APIError(error_msg)
             
+            logger.debug(f"Request was successful. Status code: {response.status_code}")
             return response.json()
         except Exception as ex:
             raise APIError(f"{str(ex)}") from ex
@@ -120,16 +126,20 @@ class BaseAPIClient(ABC, Generic[T]):
         :return: The API key.
         :raises APIError: If the API is not found.
         """
+        logger.debug("Checking for API key...")
         api_key = os.getenv(self.config.api_key_env_var)
         if api_key:
+            logger.debug(f"Found API key in env variable '{self.config.api_key_env_var}'")
             return api_key.strip()
         
         if os.path.isfile(self.config.api_key_file):
             with open(self.config.api_key_file, "r", encoding="utf-8") as api_key_file:
                 api_key = api_key_file.read().strip()
                 if api_key:
+                    logger.debug(f"Found API key in file '{self.config.api_key_file}'")
                     return api_key
         else:
+            logger.debug(f"Could not find API key. Creating: '{self.config.api_key_file}'")
             os.makedirs(os.path.dirname(self.config.api_key_file), exist_ok=True)
             with open(self.config.api_key_file, "w") as api_key_file:
                 pass
@@ -145,6 +155,8 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
     def fetch_single_price_data(self, ticker: str, currency_code: str) -> float:
         try:
+            logger.debug(f"Fetching price data for ticker: ${ticker}")
+
             api_key: str = self._get_api_key()
             headers: Dict[str, str] = self._get_request_headers(api_key)
             params: Dict[str, str] = self._get_request_params(ticker, currency_code)
@@ -156,6 +168,8 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
     def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
         try:
+            logger.debug(f"Fetching price data for ticker: {tickers}")
+
             api_key: str = self._get_api_key()
             headers: Dict[str, str] = self._get_request_headers(api_key)
             params: Dict[str, str] = self._get_request_params(tickers, currency_code)
