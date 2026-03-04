@@ -1,8 +1,11 @@
 from setuptools import setup, find_packages
 
+from crypto_fetch.constants import CF_NAME
+from crypto_fetch.constants import CF_VERSION
+
 setup(
-   name='crypto-fetch',
-   version='1.0',
+   name=CF_NAME,
+   version=CF_VERSION,
    description='Cli tool for fetching the latest cryptocurrency price data',
    author='rossliam2212',
    packages=find_packages(), 

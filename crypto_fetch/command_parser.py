@@ -13,6 +13,7 @@ from crypto_fetch.constants import CMC_API_NAME
 from crypto_fetch.constants import CMC_API_BASE
 from crypto_fetch.constants import CMC_API_LATEST_EP
 from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
+from crypto_fetch.constants import CF_VERSION
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.config import init_config
 from crypto_fetch.config import get_default_currency
@@ -37,6 +38,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--version", action='version', version=f"%(prog)s {CF_VERSION}")
     subparser = parser.add_subparsers(dest="command", required=True)
 
     # config subcommand
