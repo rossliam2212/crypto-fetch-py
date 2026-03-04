@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from crypto_fetch.exceptions import APIError
+from crypto_fetch.config import get_api_key
+from crypto_fetch.config import CONFIG_FILE
 
 T = TypeVar('T')
 logger = logging.getLogger("crypto_fetch")
@@ -18,7 +20,6 @@ class APIConfig:
     base_url: str
     latest_endpoint: str
     api_key_env_var: str
-    api_key_file: str
 
 # =========================================================================================================
 # BaseAPIClient
@@ -127,25 +128,12 @@ class BaseAPIClient(ABC, Generic[T]):
         :raises APIError: If the API is not found.
         """
         logger.debug("Checking for API key...")
-        api_key = os.getenv(self.config.api_key_env_var)
+        api_key = get_api_key(self.config.name, self.config.api_key_env_var)
         if api_key:
-            logger.debug(f"Found API key in env variable '{self.config.api_key_env_var}'")
             return api_key.strip()
-        
-        if os.path.isfile(self.config.api_key_file):
-            with open(self.config.api_key_file, "r", encoding="utf-8") as api_key_file:
-                api_key = api_key_file.read().strip()
-                if api_key:
-                    logger.debug(f"Found API key in file '{self.config.api_key_file}'")
-                    return api_key
-        else:
-            logger.debug(f"Could not find API key. Creating: '{self.config.api_key_file}'")
-            os.makedirs(os.path.dirname(self.config.api_key_file), exist_ok=True)
-            with open(self.config.api_key_file, "w") as api_key_file:
-                pass
 
         raise APIError(f"API key not found. Please set '{self.config.api_key_env_var}' " 
-                       f"env variable or add key to '{self.config.api_key_file}'")
+                       f"env variable or add key to '{CONFIG_FILE}'")
 
 # =========================================================================================================
 # CoinMarketCapAPIClient
