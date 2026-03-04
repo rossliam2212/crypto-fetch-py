@@ -1,5 +1,5 @@
-import os
 import logging
+import re
 import requests
 from typing import Dict, Any, TypeVar, Generic
 from dataclasses import dataclass
@@ -129,11 +129,25 @@ class BaseAPIClient(ABC, Generic[T]):
         """
         logger.debug("Checking for API key...")
         api_key = get_api_key(self.config.name, self.config.api_key_env_var)
-        if api_key:
-            return api_key.strip()
 
-        raise APIError(f"API key not found. Please set '{self.config.api_key_env_var}' " 
-                       f"env variable or add key to '{CONFIG_FILE}'")
+        if api_key is None:
+            raise APIError(f"API key not found. Either add key to env variable or run: crypto-fetch config init")
+
+        api_key = api_key.strip()
+        if api_key.startswith('"') or api_key.startswith("'"):
+            raise APIError(f"API key contains quotes. Remove quotes from API key in env variable or config file")
+        
+        self._validate_api_key_format(api_key)
+        return api_key
+        
+    @abstractmethod
+    def _validate_api_key_format(self, api_key: str):
+        """
+        Validates the API key ensuring it is in the correct format.
+        
+        :param api_key: The API key.
+        """
+        pass
 
 # =========================================================================================================
 # CoinMarketCapAPIClient
@@ -198,6 +212,14 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         }
         return result
     
+    def _validate_api_key_format(self, api_key: str):
+        # cmc key contains letters, numbers and hyphens (usually UUID format, 32 chars + 4 hyphens) 
+        if len(api_key) < 32:
+            raise APIError(f"Invalid {self.config.name} key. Too short: {len(api_key)} characters")
+
+        if not re.match(r'^[a-zA-Z0-9-]+$', api_key):
+            raise APIError(f"Invalid characters detected in {self.config.name} API key")
+    
 # =========================================================================================================
 # CoinGeckoAPIClient
 # =========================================================================================================
@@ -218,4 +240,7 @@ class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         pass
     
     def _parse_json_response(self, data: Dict[str, Any], currency_code: str) -> Dict[str, Dict[str, float]]:
+        pass
+
+    def _validate_api_key_format(self, api_key: str):
         pass

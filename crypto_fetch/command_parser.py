@@ -65,7 +65,7 @@ def main():
         elif args.command == "convert":
             _handle_convert_command(args, client)
     except Exception as ex:
-        logger.error(f"{str(ex)}... {ex.args}")
+        logger.error(f"{str(ex)}")
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     """

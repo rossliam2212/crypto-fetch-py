@@ -61,14 +61,17 @@ def get_api_key(provider: str, env_var: str) -> Optional[str]:
     :param env_var: The env variable the API key may be set.
     :return: the api key or None.
     """
+    # check env variable first
     api_key = os.getenv(env_var)
     if api_key:
         logger.debug(f"Found API key for '{provider}' in env variable '{env_var}'")
         return api_key.strip()
     
+    # check config file second
     config = load_config()
     api_key = config.get("api_keys", {}).get(provider, "")
-    if api_key:
+
+    if api_key and isinstance(api_key, str):
         logger.debug(f"Found API key for '{provider}' in config file")
         return api_key.strip()
     else:
