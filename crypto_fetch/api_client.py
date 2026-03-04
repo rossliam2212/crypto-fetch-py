@@ -18,11 +18,40 @@ class APIConfig:
     api_key_env_var: str
     api_key_file: str
 
+# =========================================================================================================
+# BaseAPIClient
+# =========================================================================================================
 class BaseAPIClient(ABC, Generic[T]):
     """Base class for API clients."""
 
     def __init__(self, config: APIConfig):
         self.config = config
+
+    @abstractmethod
+    def fetch_single_price_data(self, ticker: str, currency_code: str) -> float:
+        """
+        Fetches the price data for a single cryptocurrency.
+
+        :param ticker: The ticker of the cryptocurrency.
+        :param currency_code: The code of the fiat currency to fetch the data in.
+
+        :return: The price of the cryptocurrency.
+        :raises Exception: If an error occurs fetching the price data. 
+        """
+        pass
+
+    @abstractmethod
+    def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
+        """
+        Fetches the price data for multiple cryptocurrencies.
+
+        :param tickers: The list of cryptocurrency tickers as a str.
+        :param currency_code: The code of the fiat currency to fetch the data in.
+
+        :return: A formatted dict containing the price data.
+        :raises Exception: If an error occurs fetching the price data. 
+        """
+        pass
 
     @abstractmethod
     def _get_request_headers(self, api_key: str) -> Dict[str, str]:
@@ -107,20 +136,14 @@ class BaseAPIClient(ABC, Generic[T]):
 
         raise APIError(f"API key not found. Please set '{self.config.api_key_env_var}' " 
                        f"env variable or add key to '{self.config.api_key_file}'")
-    
+
+# =========================================================================================================
+# CoinMarketCapAPIClient
+# =========================================================================================================
 class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
     """Impl of the BaseAPIClient class for the CoinMarketCap API."""
 
     def fetch_single_price_data(self, ticker: str, currency_code: str) -> float:
-        """
-        Fetches the price data for a single cryptocurrency.
-
-        :param ticker: The ticker of the cryptocurrency.
-        :param currency_code: The code of the fiat currency to fetch the data in.
-
-        :return: The price of the cryptocurrency.
-        :raises Exception: If an error occurs fetching the price data. 
-        """
         try:
             api_key: str = self._get_api_key()
             headers: Dict[str, str] = self._get_request_headers(api_key)
@@ -132,15 +155,6 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
             raise Exception(f"{str(ex)}")
 
     def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
-        """
-        Fetches the price data for multiple cryptocurrencies.
-
-        :param tickers: The list of cryptocurrency tickers as a str.
-        :param currency_code: The code of the fiat currency to fetch the data in.
-
-        :return: A formatted dict containing the price data.
-        :raises Exception: If an error occurs fetching the price data. 
-        """
         try:
             api_key: str = self._get_api_key()
             headers: Dict[str, str] = self._get_request_headers(api_key)
@@ -153,41 +167,18 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         
 
     def _get_request_headers(self, api_key: str) -> Dict[str, str]:
-        """
-        Gets the headers for a reqest to the CMC API.
-        
-        :param api_key: The CMC API key.
-
-        :return: A dict containing the request headers.
-        """
         return {
             "Accepts": "application/json",
             "X-CMC_PRO_API_KEY": api_key
         }
     
     def _get_request_params(self, tickers: str, currency_code: str) -> Dict[str, str]:
-        """
-        Gets the parameters for a request to the CMC API.
-        
-        :param tickers: A single / comma-separted list of tickers as a str.
-        :param currency_code: The fiat currrency code.
-
-        :return: A dict containing the request parameters.
-        """
         return {
             "symbol": tickers,
             "convert": currency_code.upper()
         }
     
     def _parse_json_response(self, data: Dict[str, Any], currency_code: str) -> Dict[str, Dict[str, float]]:
-        """
-        Parses the JSON response received from the CMC API into a dict.
-
-        :param data: The JSON response.
-        :param currency_code: The code of the fiat currency (e.g. EUR).
-
-        :return: The JSON response parsed as a dict.
-        """
         result: Dict[str, Dict[str, float]] = {}
         raw_data: Dict[str, Any] = data.get("data", {})
         currency_code: str = currency_code.upper()
@@ -204,3 +195,25 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
                 "24h_volume": float(quote.get("volume_24h", 0)),
         }
         return result
+    
+# =========================================================================================================
+# CoinGeckoAPIClient
+# =========================================================================================================
+class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
+    """Impl of the BaseAPIClient class for the CoinGecko API."""
+    
+    def fetch_single_price_data(self, ticker: str, currency_code: str) -> float:
+        pass
+
+    def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
+        pass
+        
+
+    def _get_request_headers(self, api_key: str) -> Dict[str, str]:
+        pass
+    
+    def _get_request_params(self, tickers: str, currency_code: str) -> Dict[str, str]:
+        pass
+    
+    def _parse_json_response(self, data: Dict[str, Any], currency_code: str) -> Dict[str, Dict[str, float]]:
+        pass
