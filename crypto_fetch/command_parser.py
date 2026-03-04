@@ -14,9 +14,10 @@ from crypto_fetch.constants import CMC_API_BASE
 from crypto_fetch.constants import CMC_API_LATEST_EP
 from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
 from crypto_fetch.constants import CF_VERSION
+from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.config import init_config
-from crypto_fetch.config import get_default_currency
+from crypto_fetch.config import get_default_fiat_currency
 
 logger = logging.getLogger("crypto_fetch")
 
@@ -39,26 +40,11 @@ def main():
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--version", action='version', version=f"%(prog)s {CF_VERSION}")
+
     subparser = parser.add_subparsers(dest="command", required=True)
-
-    # config subcommand
-    config_parser = subparser.add_parser("config", help="Initialize config file")
-    config_parser.add_argument("action", choices=["init"], help="Config action")
-
-    # price subcommand
-    price_parser = subparser.add_parser("price", help="Fetch the price of a cryptocurrency")
-    price_parser.add_argument("tickers", help="Comma-separated tickers (e.g. BTC,XRP)")
-    price_parser.add_argument("-c", "--currency", default="EUR", help="Currency (default: EUR)")
-    price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
-    price_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
-
-    # convert command
-    convert_parser = subparser.add_parser("convert", help="Convert crypto to fiat")
-    convert_parser.add_argument("amount", type=_validate_positive_amount, help="Amount to convert")
-    convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
-    convert_parser.add_argument("-c", "--currency", default="EUR", help="Currency (default: EUR)")
-    convert_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
-    convert_parser.add_argument("-f", "--file", help="Portfolio file (future feature)")
+    _setup_price_command(subparser)
+    _setup_convert_command(subparser)
+    _setup_config_command(subparser)
 
     args: argparse.Namespace = parser.parse_args()
 
@@ -69,9 +55,6 @@ def main():
         if args.action == "init":
             init_config()
         return
-    
-    if hasattr(args, 'currency') and args.currency is None:
-        args.currency = get_default_currency()
 
     cmc_api_config: APIConfig = _create_cmc_config()
     client = CoinMarketCapAPIClient(cmc_api_config)
@@ -82,7 +65,41 @@ def main():
         elif args.command == "convert":
             _handle_convert_command(args, client)
     except Exception as ex:
-        logger.error(f"{str(ex)}")
+        logger.error(f"{str(ex)}... {ex.args}")
+
+def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
+    """
+    Sets up the price command.
+    
+    :param subparser: The subparser to add the price command to.
+    """
+    price_parser = subparser.add_parser("price", help="Fetch the price of a cryptocurrency")
+    price_parser.add_argument("tickers", help="Comma-separated tickers (e.g. BTC,XRP)")
+    price_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
+    price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
+    price_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
+
+def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
+    """
+    Sets up the convert command.
+    
+    :param subparser: The subparser to add the convert command to.
+    """
+    convert_parser = subparser.add_parser("convert", help="Convert crypto to fiat")
+    convert_parser.add_argument("amount", type=_validate_positive_amount, help="Amount to convert")
+    convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
+    convert_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
+    convert_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
+    convert_parser.add_argument("-f", "--file", help="Portfolio file (future feature)")
+
+def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
+    """
+    Sets up the config command.
+    
+    :param subparser: The subparser to add the config command to.
+    """
+    config_parser = subparser.add_parser("config", help="Initialize config file")
+    config_parser.add_argument("action", choices=["init"], help="Config action")
 
 def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -93,13 +110,14 @@ def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     """
     tickers: List[str] = [t.strip().upper() for t in args.tickers.split(",")]
     tickers_str: str = ",".join(tickers) # convert to comma-separated str
+    currency: str = _get_fiat_currency(args)
 
     logger.info(f"FETCHING PRICE DATA FOR TICKER(S): {_add_dollar_symbol_to_tickers(tickers)}...")
     if args.date:
         logger.info(f"Timestamp: {_get_date()}")
 
-    data = client.fetch_multiple_price_data(tickers_str, args.currency)
-    logger.info(format_price_output(data, args.currency, client.config.base_url, args.verbose))
+    data = client.fetch_multiple_price_data(tickers_str, currency)
+    logger.info(format_price_output(data, currency, client.config.base_url, args.verbose))
 
 def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -110,14 +128,15 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     """
     amount_to_convert: float = args.amount
     ticker: str = args.ticker.upper()
+    currency: str = _get_fiat_currency(args)
 
-    logger.info(f"CONVERTING {amount_to_convert} ${ticker} to {args.currency}...")
+    logger.info(f"CONVERTING {amount_to_convert} ${ticker} to {currency}...")
     if args.date:
         logger.info(f"Timestamp: {_get_date()}")
 
-    price: float = client.fetch_single_price_data(ticker, args.currency)
+    price: float = client.fetch_single_price_data(ticker, currency)
     converted_amount: float = amount_to_convert * price
-    logger.info(format_convert_output(ticker, args.currency, amount_to_convert, converted_amount))
+    logger.info(format_convert_output(ticker, currency, amount_to_convert, converted_amount))
 
 def _validate_positive_amount(value: str) -> float:
     """
@@ -129,17 +148,34 @@ def _validate_positive_amount(value: str) -> float:
     """
     try:
         amount = float(value)
-        if (amount <= 0):
-            raise argparse.ArgumentTypeError(f"Amount must be positive. Supplied: '{amount}'")
-        return amount
-    except:
-        raise argparse.ArgumentTypeError(f"Invalid amount supplied: '{value}'")
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid amount: '{value}' is not a number")
+    
+    if amount <= 0:
+        raise argparse.ArgumentTypeError(f"Amount must be positive. Supplied: '{amount}'")
+    return amount
+
+def _get_fiat_currency(args: argparse.Namespace) -> str:
+    if hasattr(args, 'currency') and args.currency is None:
+        logger.debug(f"Fiat currency not specified. Pulling default fiat currency from config file...")
+        args.currency = get_default_fiat_currency()
+
+    currency: str = _validate_currency(args.currency)
+    return currency
+
+def _validate_currency(value: str) -> str:
+    logger.debug(f"Validating fiat currency: '{value.upper()}'")
+    currency = value.upper()
+
+    if currency not in CURRENCY_SYMBOL_MAP:
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported currency supplied: '{currency}'")
+    return currency
     
 def _create_cmc_config() -> APIConfig:
     """
     Creates the default CoinMarketCap API configuration.
 
-    :return: the defailt CoinMarketCap API configuration.
+    :return: the default CoinMarketCap API configuration.
     """
     return APIConfig(
         name=CMC_API_NAME,

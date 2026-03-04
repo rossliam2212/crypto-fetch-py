@@ -74,7 +74,7 @@ def get_api_key(provider: str, env_var: str) -> Optional[str]:
     else:
         return None
     
-def get_default_currency() -> str:
+def get_default_fiat_currency() -> str:
     """
     Gets the default currency set in the config file
     

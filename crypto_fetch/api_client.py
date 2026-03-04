@@ -143,7 +143,7 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
     def fetch_single_price_data(self, ticker: str, currency_code: str) -> float:
         try:
-            logger.debug(f"Fetching price data for ticker: ${ticker}")
+            logger.debug(f"Fetching price data for ticker: '{ticker}'")
 
             api_key: str = self._get_api_key()
             headers: Dict[str, str] = self._get_request_headers(api_key)
@@ -156,7 +156,7 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
     def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
         try:
-            logger.debug(f"Fetching price data for ticker: {tickers}")
+            logger.debug(f"Fetching price data for tickers: '{tickers}'")
 
             api_key: str = self._get_api_key()
             headers: Dict[str, str] = self._get_request_headers(api_key)

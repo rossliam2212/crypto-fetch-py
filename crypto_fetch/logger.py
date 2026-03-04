@@ -29,7 +29,7 @@ def setup_logger(debug: bool = False) -> logging.Logger:
 
         formatter = LogLevelFormatter(
             fmt_info="%(message)s",
-            fmt_debug="[%(asctime)s] [%(levelname)s] %(message)s"
+            fmt_debug="[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
         )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
