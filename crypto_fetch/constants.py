@@ -8,17 +8,11 @@ CF_NAME: Final[str] = "crypto-fetch"
 CF_VERSION: Final[str] = "1.0.0"
 
 # =========================================================================================================
-# API Configuration
+# Command Configuration
 # =========================================================================================================
-CMC_API_NAME: Final[str] = "coinmarketcap"
-CMC_API_BASE: Final[str] = "https://pro-api.coinmarketcap.com/v1"
-CMC_API_LATEST_EP: Final[str] = "/cryptocurrency/quotes/latest"
-CMC_API_KEY_ENV_VAR: Final[str] = "COINMARKETCAP_API_KEY"
-
-CG_API_NAME: Final[str] = "coingecko"
-CG_API_BASE: Final[str] = "https://api.coingecko.com/api/v3/"
-CG_API_LATEST_EP: Final[str] = "/simple/price"
-CG_API_KEY_ENV_VAR: Final[str] = "COINGECKO_API_KEY"
+CMD_PRICE: Final[str] = "price"
+CMD_CONVERT: Final[str] = "convert"
+CMD_CONFIG: Final[str] = "config"
 
 # =========================================================================================================
 # Currency Configuration (Map of all supported fiat currencies [code -> symbol])

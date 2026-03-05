@@ -10,19 +10,10 @@ from crypto_fetch.api_client import CoinMarketCapAPIClient
 from crypto_fetch.api_client import CoinGeckoAPIClient
 from crypto_fetch.formatter import format_price_output
 from crypto_fetch.formatter import format_convert_output
-from crypto_fetch.constants import CMC_API_NAME
-from crypto_fetch.constants import CMC_API_BASE
-from crypto_fetch.constants import CMC_API_LATEST_EP
-from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
-from crypto_fetch.constants import CG_API_NAME
-from crypto_fetch.constants import CG_API_BASE
-from crypto_fetch.constants import CG_API_LATEST_EP
-from crypto_fetch.constants import CG_API_KEY_ENV_VAR
-from crypto_fetch.constants import CF_VERSION
-from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
-from crypto_fetch.constants import SUPPORTED_CRYPTO_TICKERS
+from crypto_fetch.constants import CF_VERSION, CURRENCY_SYMBOL_MAP, SUPPORTED_CRYPTO_TICKERS
+from crypto_fetch.constants import CMD_PRICE, CMD_CONVERT, CMD_CONFIG
 from crypto_fetch.logger import setup_logger
-from crypto_fetch.config import init_config, get_default_fiat_currency, get_default_provider
+from crypto_fetch.config import init_api_config_file, get_default_fiat_currency, get_default_api_provider, get_api_provider_config
 
 logger = logging.getLogger("crypto_fetch")
 
@@ -52,17 +43,11 @@ def main():
     _setup_config_command(subparser)
 
     args: argparse.Namespace = parser.parse_args()
-
-    setup_logger(args.debug)
-    logger.debug("Debugs logs enabled")
-
-    if args.command == "config":
-        if args.action == "init":
-            init_config()
+    args = _validate_parsed_commands(args)
+    if args is None:
         return
 
     client = _create_api_client(args)
-
     try:
         if args.command == "price":
             _handle_price_command(args, client)
@@ -114,17 +99,14 @@ def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     :param args: The command line args.
     :param client: The API client.
     """
-    tickers: List[str] = [t.strip().upper() for t in args.tickers.split(",")]
-    _validate_tickers(tickers)
-    tickers_str: str = ",".join(tickers) # convert to comma-separated str
-    currency: str = _get_fiat_currency(args)
-
+    tickers = args.tickers.split(",")
+    
     logger.info(f"FETCHING PRICE DATA FOR TICKER(S): {_add_dollar_symbol_to_tickers(tickers)}...")
     if args.date:
         logger.info(f"Timestamp: {_get_date()}")
 
-    data = client.fetch_multiple_price_data(tickers_str, currency)
-    logger.info(format_price_output(data, currency, client.config.base_url, args.verbose))
+    data = client.fetch_multiple_price_data(args.tickers, args.currency)
+    logger.info(format_price_output(data, args.currency, client.config.base_url, args.verbose))
 
 def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -133,32 +115,71 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     :param args: The command line args.
     :param client: The API client.
     """
-    amount_to_convert: float = args.amount
-    ticker: str = args.ticker.upper()
-    _validate_tickers([ticker])
-    currency: str = _get_fiat_currency(args)
-
-    logger.info(f"CONVERTING {amount_to_convert} ${ticker} to {currency}...")
+    logger.info(f"CONVERTING {args.amount} ${args.ticker} to {args.currency}...")
     if args.date:
         logger.info(f"Timestamp: {_get_date()}")
 
-    price: float = client.fetch_single_price_data(ticker, currency)
-    converted_amount: float = amount_to_convert * price
-    logger.info(format_convert_output(ticker, currency, amount_to_convert, converted_amount))
+    price: float = client.fetch_single_price_data(args.ticker, args.currency)
+    converted_amount: float = args.amount * price
+    logger.info(format_convert_output(args.ticker, args.currency, args.amount, converted_amount))
+
+def _validate_parsed_commands(args: argparse.Namespace) -> argparse.Namespace:
+    """
+    Validates the parsed arguments. 
+    Handles the config command.
+
+    :param args: The command line args.
+    :return: The validated command line args.
+    """
+    # enable debug logs 
+    setup_logger(args.debug)
+    logger.debug("Debug logs enabled")
+
+    logger.debug(f"Validating parsed arguments...")
+
+    # handle config command & initialization
+    if args.command == CMD_CONFIG:
+        if args.action == "init":
+            init_api_config_file()
+        return None
+    
+    # validate currency or get default
+    if args.currency is None:
+        args.currency = get_default_fiat_currency()
+        logger.debug(f"Fiat currency not specified. Using default: '{args.currency}'")
+    args.currency = _validate_currency(args.currency)
+
+    # validate provider or get default
+    if args.provider is None:
+        args.provider = get_default_api_provider()
+        logger.debug(f"API provider not specified. Using default: '{args.provider}'")
+    args.provider = _validate_provider(args.provider)
+    
+    # prepare for price/convert command 
+    if args.command == CMD_PRICE:
+        tickers = [t.strip().upper() for t in args.tickers.split(",") if t.strip()]
+        if not tickers:
+            raise argparse.ArgumentTypeError(f"No valid tickers provided. Got: {tickers}")
+        
+        _validate_tickers(tickers)
+        args.tickers = ",".join(tickers)
+    elif args.command == CMD_CONVERT:
+        args.ticker = args.ticker.strip().upper()
+        _validate_tickers([args.ticker])
+    
+    return args
 
 def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
     """
     Creates an API client based on the provider.
 
-    :param provider: The API provider name.
+    :param args: The command line args.
 
     :return: the API client.
     """
-    provider = _get_api_provider(args)
-
-    if provider == CG_API_NAME:
-        return CoinGeckoAPIClient(_create_cg_config())
-    return CoinMarketCapAPIClient(_create_cmc_config())
+    if args.provider == "coingecko":
+        return CoinGeckoAPIClient(_create_api_config("coingecko"))
+    return CoinMarketCapAPIClient(_create_api_config("coinmarketcap"))
 
 def _validate_positive_amount(value: str) -> float:
     """
@@ -177,23 +198,6 @@ def _validate_positive_amount(value: str) -> float:
         raise argparse.ArgumentTypeError(f"Amount must be positive. Supplied: '{amount}'")
     return amount
 
-def _get_api_provider(args: argparse.Namespace) -> str:
-    """
-    Gets the API provider from args or config default.
-    
-    :param args: The command line args.
-    
-    :return: The validated API provider name.
-    """
-    if args.provider is None:
-        logger.debug(f"API provider not specified. Using default")
-        provider = get_default_provider()
-    else:
-        provider = args.provider
-
-    provider: str = _validate_provider(provider)
-    return provider
-
 def _validate_provider(value: str) -> str:
     """
     Validates the supplied API provider.
@@ -206,24 +210,9 @@ def _validate_provider(value: str) -> str:
     logger.debug(f"Validating provider: '{value.lower()}'")
     provider = value.lower()
 
-    if provider not in [CMC_API_NAME, CG_API_NAME]:
+    if provider not in ["coinmarketcap", "coingecko"]:
         raise argparse.ArgumentTypeError(f"Unknown/Unsupported provider supplied: '{provider}'")
     return provider
-
-def _get_fiat_currency(args: argparse.Namespace) -> str:
-    """
-    Gets the fiat currency from args or config default.
-    
-    :param args: The command line args.
-    
-    :return: The validated fiat currency code.
-    """
-    if args.currency is None:
-        logger.debug(f"Fiat currency not specified. Using default")
-        args.currency = get_default_fiat_currency()
-
-    currency: str = _validate_currency(args.currency)
-    return currency
 
 def _validate_currency(value: str) -> str:
     """
@@ -249,36 +238,27 @@ def _validate_tickers(tickers: List[str]) -> None:
     
     :raises argparse.ArgumentTypeError: if any ticker is invalid.
     """
-    logger.debug(f"Validing the supplied crypto tickers: {tickers}")
+    logger.debug(f"Validing supplied crypto tickers: {tickers}")
     invalid_tickers = [t for t in tickers if t not in SUPPORTED_CRYPTO_TICKERS]
     
     if invalid_tickers:
         raise argparse.ArgumentTypeError(f"Unknown/Unsupported ticker(s): {', '.join(invalid_tickers)}")
 
-def _create_cmc_config() -> APIConfig:
+def _create_api_config(provider: str) -> APIConfig:
     """
-    Creates the default CoinMarketCap API configuration.
+    Creates API configuration from config file.
 
-    :return: the default CoinMarketCap API configuration.
+    :param provider: The provider name.
+    :return: the API configuration.
     """
+    logger.debug(f"Creating API client for provider: '{provider}'")
+    config = get_api_provider_config(provider)
+    
     return APIConfig(
-        name=CMC_API_NAME,
-        base_url=CMC_API_BASE,
-        latest_endpoint=CMC_API_LATEST_EP,
-        api_key_env_var=CMC_API_KEY_ENV_VAR,
-    )
-
-def _create_cg_config() -> APIConfig:
-    """
-    Creates the default CoinGecko API configuration.
-
-    :return: the default CoinGecko API configuration.
-    """
-    return APIConfig(
-        name=CG_API_NAME,
-        base_url=CG_API_BASE,
-        latest_endpoint=CG_API_LATEST_EP,
-        api_key_env_var=CG_API_KEY_ENV_VAR,
+        name=config.get("name", provider),
+        base_url=config.get("base_url", ""),
+        latest_endpoint=config.get("price_ep", ""),
+        api_key_env_var=config.get("env_var", ""),
     )
 
 def _get_date() -> str:

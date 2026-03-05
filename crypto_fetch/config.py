@@ -16,12 +16,24 @@ DEFAULT_CONFIG = {
         "currency": "EUR",
         "api_provider": "coinmarketcap",
         "api_timeout": 10
+    },
+    "coinmarketcap": {
+        "name": "coinmarketcap",
+        "env_var": "COINMARKETCAP_API_KEY",
+        "base_url": "https://pro-api.coinmarketcap.com/v1",
+        "price_ep": "/cryptocurrency/quotes/latest"
+    },
+    "coingecko": {
+        "name": "coingecko",
+        "env_var": "COINGECKO_API_KEY",
+        "base_url": "https://api.coingecko.com/api/v3/",
+        "price_ep": "/simple/price"
     }
 }
 
 logger = logging.getLogger("crypto_fetch")
 
-def init_config() -> None:
+def init_api_config_file() -> None:
     """
     Initializes the config file with the defaults.
     """
@@ -30,11 +42,11 @@ def init_config() -> None:
         logger.info(f"Config file already exists at: '{CONFIG_FILE}'")
         return
     
-    save_config(DEFAULT_CONFIG)
+    save_api_config_to_file(DEFAULT_CONFIG)
     logger.info(f"Created config file at: '{CONFIG_FILE}'")
     logger.info(f"Edit this file to add you API keys and set defaults")
     
-def save_config(config: Dict[str, Any]) -> None:
+def save_api_config_to_file(config: Dict[str, Any]) -> None:
     """
     Saves configuration to the config file.
     
@@ -44,9 +56,10 @@ def save_config(config: Dict[str, Any]) -> None:
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False)
 
-def load_config() -> Dict[str, Any]:
+def load_api_config_from_file() -> Dict[str, Any]:
     """
-    Loads the config file.
+    Loads the YAML config file.
+    Converts the YAML input from the config file into a dict[str, Any].
     
     :return: the loaded config file or the deafult.
     """
@@ -72,7 +85,7 @@ def get_api_key(provider: str, env_var: str) -> Optional[str]:
         return api_key.strip()
     
     # check config file second
-    config = load_config()
+    config = load_api_config_from_file()
     api_key = config.get("api_keys", {}).get(provider, "")
 
     if api_key and isinstance(api_key, str):
@@ -87,7 +100,7 @@ def get_default_fiat_currency() -> str:
     
     :return: the default currency.
     """
-    config = load_config()
+    config = load_api_config_from_file()
     return config.get("defaults", {}).get("currency", "EUR")
 
 def get_default_api_timeout() -> int:
@@ -96,14 +109,35 @@ def get_default_api_timeout() -> int:
     
     :return: timeout in seconds.
     """
-    config = load_config()
+    config = load_api_config_from_file()
     return config.get("defaults", {}).get("api_timeout", 10)
 
-def get_default_provider() -> str:
+def get_default_api_provider() -> str:
     """
     Gets the default API provider from config.
     
     :return: provider name.
     """
-    config = load_config()
+    config = load_api_config_from_file()
     return config.get("defaults", {}).get("api_provider", "coinmarketcap")
+
+def get_api_provider_config(provider: str) -> Dict[str, str]:
+    """
+    Gets the provider configuration from config file.
+    
+    :param provider: The provider name.
+
+    :return: Supplied or default provider configuration as a dict.
+    """
+    config = load_api_config_from_file()
+    provider_config = config.get(provider, {})
+    
+    if not provider_config:
+        logger.warning(f"No config found for provider '{provider}'. Using defaults")
+        return DEFAULT_CONFIG.get(provider, {})
+    
+    # Strip trailing commas from values
+    sanitized = {k: v.rstrip(',') if isinstance(v, str) else v for k, v in provider_config.items()}
+    
+    logger.debug(f"Loaded config: {sanitized}")
+    return sanitized

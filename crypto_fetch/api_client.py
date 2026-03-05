@@ -7,7 +7,6 @@ from abc import ABC, abstractmethod
 
 from crypto_fetch.exceptions import APIError
 from crypto_fetch.config import get_api_key, get_default_api_timeout
-from crypto_fetch.config import CONFIG_FILE
 from crypto_fetch.constants import CG_COIN_ID_MAP
 
 T = TypeVar('T')
@@ -168,8 +167,10 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
             data = self._make_request(headers, params)
             return data['data'][ticker]['quote'][currency_code.upper()]['price']
+        except APIError:
+            raise
         except Exception as ex:
-            raise Exception(f"{str(ex)}")
+            raise APIError(f"Failed to fetch price for '{ticker}: {ex}'") from ex
 
     def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
         try:
@@ -181,8 +182,10 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
             data = self._make_request(headers, params)
             return self._parse_json_response(data, currency_code)
+        except APIError:
+            raise
         except Exception as ex:
-            raise Exception(f"{str(ex)}")
+            raise APIError(f"Failed to fetch price for '{tickers}: {ex}'") from ex
         
 
     def _get_request_headers(self, api_key: str) -> Dict[str, str]:
