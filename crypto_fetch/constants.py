@@ -15,6 +15,11 @@ CMC_API_BASE: Final[str] = "https://pro-api.coinmarketcap.com/v1"
 CMC_API_LATEST_EP: Final[str] = "/cryptocurrency/quotes/latest"
 CMC_API_KEY_ENV_VAR: Final[str] = "COINMARKETCAP_API_KEY"
 
+CG_API_NAME: Final[str] = "coingecko"
+CG_API_BASE: Final[str] = "https://api.coingecko.com/api/v3/"
+CG_API_LATEST_EP: Final[str] = "/simple/price"
+CG_API_KEY_ENV_VAR: Final[str] = "COINGECKO_API_KEY"
+
 # =========================================================================================================
 # Currency Configuration (Map of all supported fiat currencies [code -> symbol])
 # =========================================================================================================
@@ -47,6 +52,29 @@ CURRENCY_CODE_ONLY_MAP = {
     "SEK": " kr", # Swedish Krona
     "HUF": "Ft"   # Hungarian Forint
 }
+
+CG_COIN_ID_MAP = {
+        "BTC": "bitcoin",
+        "ETH": "ethereum",
+        "XRP": "ripple",
+        "BNB": "binancecoin",
+        "SOL": "solana",
+        "ADA": "cardano",
+        "DOGE": "dogecoin",
+        "DOT": "polkadot",
+        "MATIC": "matic-network",
+        "LTC": "litecoin",
+        "AVAX": "avalanche-2",
+        "LINK": "chainlink",
+        "UNI": "uniswap",
+        "XLM": "stellar",
+        "ATOM": "cosmos",
+        "HBAR": "hedera-hashgraph",
+        "ALGO": "algorand",
+        "VET": "vechain",
+        "ICP": "internet-computer",
+        "FIL": "filecoin",
+    }
 
 # =========================================================================================================
 # Display Configuration

@@ -77,15 +77,17 @@ def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> Lis
     """
     verbose_details: List[str] = []
 
-    change_1hr: float = data.get("1h_change", 0)
+    change_1hr = data.get("1h_change")
     change_24hr: float = data.get("24h_change", 0)
-    change_7d: float = data.get("7d_change", 0)
+    change_7d = data.get("7d_change")
     market_cap: float = data.get("market_cap", 0)
     volume_24hr: float = data.get("24h_volume", 0)
 
-    verbose_details.append(f"\t> 1hr Change:  {_format_percentage_change(change_1hr)}")
+    if change_1hr is not None:
+        verbose_details.append(f"\t> 1hr Change:  {_format_percentage_change(change_1hr)}")
     verbose_details.append(f"\t> 24hr Change: {_format_percentage_change(change_24hr)}")
-    verbose_details.append(f"\t> 7d Change:   {_format_percentage_change(change_7d)}")
+    if change_7d is not None:
+        verbose_details.append(f"\t> 7d Change:   {_format_percentage_change(change_7d)}")
     verbose_details.append(f"\t> 24hr Volume: {_format_large_number(volume_24hr, currency_code)}")
     verbose_details.append(f"\t> Market Cap:  {_format_large_number(market_cap, currency_code)}")
 
@@ -130,7 +132,7 @@ def _format_large_number(number: float, currency_code: str) -> str:
     scaled: float = number / (10 ** (3 * magnitude))
     
     if scaled < 10:
-        precision = PRECISION_MEDIUM
+        precision = PRECISION_HIGH
     elif scaled < 100:
         precision = PRECISION_MEDIUM
     else:

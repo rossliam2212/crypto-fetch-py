@@ -7,12 +7,17 @@ from typing import List
 from crypto_fetch.api_client import APIConfig
 from crypto_fetch.api_client import BaseAPIClient
 from crypto_fetch.api_client import CoinMarketCapAPIClient
+from crypto_fetch.api_client import CoinGeckoAPIClient
 from crypto_fetch.formatter import format_price_output
 from crypto_fetch.formatter import format_convert_output
 from crypto_fetch.constants import CMC_API_NAME
 from crypto_fetch.constants import CMC_API_BASE
 from crypto_fetch.constants import CMC_API_LATEST_EP
 from crypto_fetch.constants import CMC_API_KEY_ENV_VAR
+from crypto_fetch.constants import CG_API_NAME
+from crypto_fetch.constants import CG_API_BASE
+from crypto_fetch.constants import CG_API_LATEST_EP
+from crypto_fetch.constants import CG_API_KEY_ENV_VAR
 from crypto_fetch.constants import CF_VERSION
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.logger import setup_logger
@@ -56,8 +61,7 @@ def main():
             init_config()
         return
 
-    cmc_api_config: APIConfig = _create_cmc_config()
-    client = CoinMarketCapAPIClient(cmc_api_config)
+    client = _create_api_client(args.provider)
 
     try:
         if args.command == "price":
@@ -65,7 +69,7 @@ def main():
         elif args.command == "convert":
             _handle_convert_command(args, client)
     except Exception as ex:
-        logger.error(f"{str(ex)}")
+        logger.error(f"{str(ex)}... {ex.args}")
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -78,6 +82,7 @@ def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     price_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
     price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
     price_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
+    price_parser.add_argument("-p", "--provider", choices=["coinmarketcap", "coingecko"], default="coinmarketcap", help="Choose API provider (default: coinmarketcap)")
 
 def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -90,7 +95,8 @@ def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
     convert_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
     convert_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
-    convert_parser.add_argument("-f", "--file", help="Portfolio file (future feature)")
+    convert_parser.add_argument("-p", "--provider", choices=["coinmarketcap", "coingecko"], default="coinmarketcap", help="Choose API provider (default: coinmarketcap)")
+    convert_parser.add_argument("-f", "--file", help="Portfolio file (#TODO)")
 
 def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -156,8 +162,8 @@ def _validate_positive_amount(value: str) -> float:
     return amount
 
 def _get_fiat_currency(args: argparse.Namespace) -> str:
-    if hasattr(args, 'currency') and args.currency is None:
-        logger.debug(f"Fiat currency not specified. Pulling default fiat currency from config file...")
+    if args.currency is None:
+        logger.debug(f"Fiat currency not specified. Using default")
         args.currency = get_default_fiat_currency()
 
     currency: str = _validate_currency(args.currency)
@@ -171,6 +177,14 @@ def _validate_currency(value: str) -> str:
         raise argparse.ArgumentTypeError(f"Unknown/Unsupported currency supplied: '{currency}'")
     return currency
     
+def _validate_provider(value: str) -> str:
+    logger.debug(f"Validating provider: '{value.lower()}'")
+    provider = value.lower()
+
+    if provider not in [CMC_API_NAME, CG_API_NAME]:
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported provider supplied: '{provider}'")
+    return provider
+
 def _create_cmc_config() -> APIConfig:
     """
     Creates the default CoinMarketCap API configuration.
@@ -183,6 +197,32 @@ def _create_cmc_config() -> APIConfig:
         latest_endpoint=CMC_API_LATEST_EP,
         api_key_env_var=CMC_API_KEY_ENV_VAR,
     )
+
+def _create_cg_config() -> APIConfig:
+    """
+    Creates the default CoinGecko API configuration.
+
+    :return: the default CoinGecko API configuration.
+    """
+    return APIConfig(
+        name=CG_API_NAME,
+        base_url=CG_API_BASE,
+        latest_endpoint=CG_API_LATEST_EP,
+        api_key_env_var=CG_API_KEY_ENV_VAR,
+    )
+
+def _create_api_client(provider: str) -> BaseAPIClient:
+    """
+    Creates an API client based on the provider.
+
+    :param provider: The API provider name.
+
+    :return: the API client.
+    """
+    provider = _validate_provider(provider)
+    if provider == CG_API_NAME:
+        return CoinGeckoAPIClient(_create_cg_config())
+    return CoinMarketCapAPIClient(_create_cmc_config())
 
 def _get_date() -> str:
     """

@@ -9,7 +9,8 @@ CONFIG_FILE = CONFIG_DIR / "config.yaml"
 
 DEFAULT_CONFIG = {
     "api_keys": {
-        "coinmarketcap": ""
+        "coinmarketcap": "",
+        "coingecko": ""
     },
     "defaults": {
         "currency": "EUR"
