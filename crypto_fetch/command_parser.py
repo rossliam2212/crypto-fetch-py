@@ -20,6 +20,7 @@ from crypto_fetch.constants import CG_API_LATEST_EP
 from crypto_fetch.constants import CG_API_KEY_ENV_VAR
 from crypto_fetch.constants import CF_VERSION
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
+from crypto_fetch.constants import SUPPORTED_CRYPTO_TICKERS
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.config import init_config, get_default_fiat_currency, get_default_provider
 
@@ -68,7 +69,7 @@ def main():
         elif args.command == "convert":
             _handle_convert_command(args, client)
     except Exception as ex:
-        logger.error(f"{str(ex)}... {ex.args}")
+        logger.error(f"{str(ex)}")
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -114,6 +115,7 @@ def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     :param client: The API client.
     """
     tickers: List[str] = [t.strip().upper() for t in args.tickers.split(",")]
+    _validate_tickers(tickers)
     tickers_str: str = ",".join(tickers) # convert to comma-separated str
     currency: str = _get_fiat_currency(args)
 
@@ -133,6 +135,7 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     """
     amount_to_convert: float = args.amount
     ticker: str = args.ticker.upper()
+    _validate_tickers([ticker])
     currency: str = _get_fiat_currency(args)
 
     logger.info(f"CONVERTING {amount_to_convert} ${ticker} to {currency}...")
@@ -237,6 +240,20 @@ def _validate_currency(value: str) -> str:
     if currency not in CURRENCY_SYMBOL_MAP:
         raise argparse.ArgumentTypeError(f"Unknown/Unsupported currency supplied: '{currency}'")
     return currency
+
+def _validate_tickers(tickers: List[str]) -> None:
+    """
+    Validates the supplied cryptocurrency tickers.
+    
+    :param tickers: List of ticker symbols.
+    
+    :raises argparse.ArgumentTypeError: if any ticker is invalid.
+    """
+    logger.debug(f"Validing the supplied crypto tickers: {tickers}")
+    invalid_tickers = [t for t in tickers if t not in SUPPORTED_CRYPTO_TICKERS]
+    
+    if invalid_tickers:
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported ticker(s): {', '.join(invalid_tickers)}")
 
 def _create_cmc_config() -> APIConfig:
     """

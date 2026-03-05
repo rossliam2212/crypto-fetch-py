@@ -53,28 +53,34 @@ CURRENCY_CODE_ONLY_MAP = {
     "HUF": "Ft"   # Hungarian Forint
 }
 
+SUPPORTED_CRYPTO_TICKERS = {
+    "BTC", "ETH", "XRP", "BNB", "SOL", "ADA", "DOGE", "DOT", 
+    "MATIC", "LTC", "AVAX", "LINK", "UNI", "XLM", "ATOM", 
+    "HBAR", "ALGO", "VET", "ICP", "FIL"
+}
+
 CG_COIN_ID_MAP = {
-        "BTC": "bitcoin",
-        "ETH": "ethereum",
-        "XRP": "ripple",
-        "BNB": "binancecoin",
-        "SOL": "solana",
-        "ADA": "cardano",
-        "DOGE": "dogecoin",
-        "DOT": "polkadot",
-        "MATIC": "matic-network",
-        "LTC": "litecoin",
-        "AVAX": "avalanche-2",
-        "LINK": "chainlink",
-        "UNI": "uniswap",
-        "XLM": "stellar",
-        "ATOM": "cosmos",
-        "HBAR": "hedera-hashgraph",
-        "ALGO": "algorand",
-        "VET": "vechain",
-        "ICP": "internet-computer",
-        "FIL": "filecoin",
-    }
+    "BTC": "bitcoin",
+    "ETH": "ethereum",
+    "XRP": "ripple",
+    "BNB": "binancecoin",
+    "SOL": "solana",
+    "ADA": "cardano",
+    "DOGE": "dogecoin",
+    "DOT": "polkadot",
+    "MATIC": "matic-network",
+    "LTC": "litecoin",
+    "AVAX": "avalanche-2",
+    "LINK": "chainlink",
+    "UNI": "uniswap",
+    "XLM": "stellar",
+    "ATOM": "cosmos",
+    "HBAR": "hedera-hashgraph",
+    "ALGO": "algorand",
+    "VET": "vechain",
+    "ICP": "internet-computer",
+    "FIL": "filecoin",
+}
 
 # =========================================================================================================
 # Display Configuration
