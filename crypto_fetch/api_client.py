@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from crypto_fetch.exceptions import APIError
-from crypto_fetch.config import get_api_key
+from crypto_fetch.config import get_api_key, get_default_api_timeout
 from crypto_fetch.config import CONFIG_FILE
 from crypto_fetch.constants import CG_COIN_ID_MAP
 
@@ -105,11 +105,13 @@ class BaseAPIClient(ABC, Generic[T]):
             request_url = f"{self.config.base_url}{self.config.latest_endpoint}"
             logger.debug(f"Making request to: '{request_url}'")
 
+            response_timeout = get_default_api_timeout()
+
             response: requests.Response = requests.get(
                 url=request_url,
                 headers=headers,
                 params=params,
-                timeout=10
+                timeout=response_timeout
             )
 
             if response.status_code != 200:

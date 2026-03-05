@@ -21,8 +21,7 @@ from crypto_fetch.constants import CG_API_KEY_ENV_VAR
 from crypto_fetch.constants import CF_VERSION
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.logger import setup_logger
-from crypto_fetch.config import init_config
-from crypto_fetch.config import get_default_fiat_currency
+from crypto_fetch.config import init_config, get_default_fiat_currency, get_default_provider
 
 logger = logging.getLogger("crypto_fetch")
 
@@ -61,7 +60,7 @@ def main():
             init_config()
         return
 
-    client = _create_api_client(args.provider)
+    client = _create_api_client(args)
 
     try:
         if args.command == "price":
@@ -82,7 +81,7 @@ def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     price_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
     price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
     price_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
-    price_parser.add_argument("-p", "--provider", choices=["coinmarketcap", "coingecko"], default="coinmarketcap", help="Choose API provider (default: coinmarketcap)")
+    price_parser.add_argument("-p", "--provider", choices=["coinmarketcap", "coingecko"], default=None, help="Choose API provider (default: coinmarketcap)")
 
 def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -144,6 +143,20 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
     converted_amount: float = amount_to_convert * price
     logger.info(format_convert_output(ticker, currency, amount_to_convert, converted_amount))
 
+def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
+    """
+    Creates an API client based on the provider.
+
+    :param provider: The API provider name.
+
+    :return: the API client.
+    """
+    provider = _get_api_provider(args)
+
+    if provider == CG_API_NAME:
+        return CoinGeckoAPIClient(_create_cg_config())
+    return CoinMarketCapAPIClient(_create_cmc_config())
+
 def _validate_positive_amount(value: str) -> float:
     """
     Validates the amount supplied for the convert command is positive.
@@ -161,7 +174,47 @@ def _validate_positive_amount(value: str) -> float:
         raise argparse.ArgumentTypeError(f"Amount must be positive. Supplied: '{amount}'")
     return amount
 
+def _get_api_provider(args: argparse.Namespace) -> str:
+    """
+    Gets the API provider from args or config default.
+    
+    :param args: The command line args.
+    
+    :return: The validated API provider name.
+    """
+    if args.provider is None:
+        logger.debug(f"API provider not specified. Using default")
+        provider = get_default_provider()
+    else:
+        provider = args.provider
+
+    provider: str = _validate_provider(provider)
+    return provider
+
+def _validate_provider(value: str) -> str:
+    """
+    Validates the supplied API provider.
+    
+    :param value: The API provider name.
+    
+    :return: The validated provider name.
+    :raises argparse.ArgumentTypeError: if the validation fails.
+    """
+    logger.debug(f"Validating provider: '{value.lower()}'")
+    provider = value.lower()
+
+    if provider not in [CMC_API_NAME, CG_API_NAME]:
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported provider supplied: '{provider}'")
+    return provider
+
 def _get_fiat_currency(args: argparse.Namespace) -> str:
+    """
+    Gets the fiat currency from args or config default.
+    
+    :param args: The command line args.
+    
+    :return: The validated fiat currency code.
+    """
     if args.currency is None:
         logger.debug(f"Fiat currency not specified. Using default")
         args.currency = get_default_fiat_currency()
@@ -170,20 +223,20 @@ def _get_fiat_currency(args: argparse.Namespace) -> str:
     return currency
 
 def _validate_currency(value: str) -> str:
+    """
+    Validates the supplied fiat currency symbol.
+
+    :param value: The fiat currency symbol.
+
+    :return: The validated fiat currency symbol.
+    :raises argparse.ArgumentTypeError: if the validation fails.
+    """
     logger.debug(f"Validating fiat currency: '{value.upper()}'")
     currency = value.upper()
 
     if currency not in CURRENCY_SYMBOL_MAP:
         raise argparse.ArgumentTypeError(f"Unknown/Unsupported currency supplied: '{currency}'")
     return currency
-    
-def _validate_provider(value: str) -> str:
-    logger.debug(f"Validating provider: '{value.lower()}'")
-    provider = value.lower()
-
-    if provider not in [CMC_API_NAME, CG_API_NAME]:
-        raise argparse.ArgumentTypeError(f"Unknown/Unsupported provider supplied: '{provider}'")
-    return provider
 
 def _create_cmc_config() -> APIConfig:
     """
@@ -210,19 +263,6 @@ def _create_cg_config() -> APIConfig:
         latest_endpoint=CG_API_LATEST_EP,
         api_key_env_var=CG_API_KEY_ENV_VAR,
     )
-
-def _create_api_client(provider: str) -> BaseAPIClient:
-    """
-    Creates an API client based on the provider.
-
-    :param provider: The API provider name.
-
-    :return: the API client.
-    """
-    provider = _validate_provider(provider)
-    if provider == CG_API_NAME:
-        return CoinGeckoAPIClient(_create_cg_config())
-    return CoinMarketCapAPIClient(_create_cmc_config())
 
 def _get_date() -> str:
     """

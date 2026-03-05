@@ -13,7 +13,9 @@ DEFAULT_CONFIG = {
         "coingecko": ""
     },
     "defaults": {
-        "currency": "EUR"
+        "currency": "EUR",
+        "api_provider": "coinmarketcap",
+        "api_timeout": 10
     }
 }
 
@@ -60,6 +62,7 @@ def get_api_key(provider: str, env_var: str) -> Optional[str]:
     
     :param provider: The provider to get the API key for.
     :param env_var: The env variable the API key may be set.
+
     :return: the api key or None.
     """
     # check env variable first
@@ -86,3 +89,21 @@ def get_default_fiat_currency() -> str:
     """
     config = load_config()
     return config.get("defaults", {}).get("currency", "EUR")
+
+def get_default_api_timeout() -> int:
+    """
+    Gets the default API timeout from config.
+    
+    :return: timeout in seconds.
+    """
+    config = load_config()
+    return config.get("defaults", {}).get("api_timeout", 10)
+
+def get_default_provider() -> str:
+    """
+    Gets the default API provider from config.
+    
+    :return: provider name.
+    """
+    config = load_config()
+    return config.get("defaults", {}).get("api_provider", "coinmarketcap")
