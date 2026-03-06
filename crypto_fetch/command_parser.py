@@ -1,6 +1,6 @@
 import argparse
 import logging
-from colorama import just_fix_windows_console
+from colorama import just_fix_windows_console # type: ignore
 from datetime import datetime
 from typing import List
 
@@ -10,12 +10,11 @@ from crypto_fetch.api_client import CoinMarketCapAPIClient
 from crypto_fetch.api_client import CoinGeckoAPIClient
 from crypto_fetch.formatter import format_price_output
 from crypto_fetch.formatter import format_convert_output
-from crypto_fetch.constants import CF_VERSION, CURRENCY_SYMBOL_MAP, SUPPORTED_CRYPTO_TICKERS
-from crypto_fetch.constants import CMD_PRICE, CMD_CONVERT, CMD_CONFIG
+from crypto_fetch.constants import *
 from crypto_fetch.logger import setup_logger
-from crypto_fetch.config import init_api_config_file, get_default_fiat_currency, get_default_api_provider, get_api_provider_config
+from crypto_fetch.config import *
 
-logger = logging.getLogger("crypto_fetch")
+logger = logging.getLogger(CF_LOGGER)
 
 def main():
     """
@@ -30,6 +29,9 @@ def main():
     - convert command
         $ crypto-fetch convert 50 -t BTC
         $ crypto-fetch convert 1000 --ticker XRP --currency CAD
+
+    - config command
+        $ crypto-fetch config init
     """
     just_fix_windows_console()
 
@@ -44,17 +46,17 @@ def main():
 
     args: argparse.Namespace = parser.parse_args()
     args = _validate_parsed_commands(args)
-    if args is None:
+    if args is None: # config command exit
         return
 
     client = _create_api_client(args)
     try:
-        if args.command == "price":
+        if args.command == CMD_PRICE:
             _handle_price_command(args, client)
-        elif args.command == "convert":
+        elif args.command == CMD_CONVERT:
             _handle_convert_command(args, client)
     except Exception as ex:
-        logger.error(f"{str(ex)}")
+        logger.error(f"{args.command} command failed. Error: {ex}")
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -62,7 +64,7 @@ def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     
     :param subparser: The subparser to add the price command to.
     """
-    price_parser = subparser.add_parser("price", help="Fetch the price of a cryptocurrency")
+    price_parser = subparser.add_parser(CMD_PRICE, help="Fetch the price of a cryptocurrency")
     price_parser.add_argument("tickers", help="Comma-separated tickers (e.g. BTC,XRP)")
     price_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
     price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
@@ -75,7 +77,7 @@ def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     
     :param subparser: The subparser to add the convert command to.
     """
-    convert_parser = subparser.add_parser("convert", help="Convert crypto to fiat")
+    convert_parser = subparser.add_parser(CMD_CONVERT, help="Convert crypto to fiat")
     convert_parser.add_argument("amount", type=_validate_positive_amount, help="Amount to convert")
     convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
     convert_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
@@ -89,8 +91,8 @@ def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
     
     :param subparser: The subparser to add the config command to.
     """
-    config_parser = subparser.add_parser("config", help="Initialize config file")
-    config_parser.add_argument("action", choices=["init"], help="Config action")
+    config_parser = subparser.add_parser(CMD_CONFIG, help="Initialize config file")
+    config_parser.add_argument("action", choices=[CMD_CONFIG_INIT], help="Config action")
 
 def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -126,7 +128,7 @@ def _handle_convert_command(args: argparse.Namespace, client: BaseAPIClient):
 def _validate_parsed_commands(args: argparse.Namespace) -> argparse.Namespace:
     """
     Validates the parsed arguments. 
-    Handles the config command.
+    Handles the config command if supplied.
 
     :param args: The command line args.
     :return: The validated command line args.
@@ -139,7 +141,7 @@ def _validate_parsed_commands(args: argparse.Namespace) -> argparse.Namespace:
 
     # handle config command & initialization
     if args.command == CMD_CONFIG:
-        if args.action == "init":
+        if args.action == CMD_CONFIG_INIT:
             init_api_config_file()
         return None
     
@@ -177,9 +179,9 @@ def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
 
     :return: the API client.
     """
-    if args.provider == "coingecko":
-        return CoinGeckoAPIClient(_create_api_config("coingecko"))
-    return CoinMarketCapAPIClient(_create_api_config("coinmarketcap"))
+    if args.provider == PROVIDER_COINGECKO:
+        return CoinGeckoAPIClient(_create_api_config(PROVIDER_COINGECKO))
+    return CoinMarketCapAPIClient(_create_api_config(PROVIDER_COINMARKETCAP))
 
 def _validate_positive_amount(value: str) -> float:
     """
@@ -195,7 +197,7 @@ def _validate_positive_amount(value: str) -> float:
         raise argparse.ArgumentTypeError(f"Invalid amount: '{value}' is not a number")
     
     if amount <= 0:
-        raise argparse.ArgumentTypeError(f"Amount must be positive. Supplied: '{amount}'")
+        raise argparse.ArgumentTypeError(f"Amount must be positive. Received: '{amount}'")
     return amount
 
 def _validate_provider(value: str) -> str:
@@ -210,8 +212,8 @@ def _validate_provider(value: str) -> str:
     logger.debug(f"Validating provider: '{value.lower()}'")
     provider = value.lower()
 
-    if provider not in ["coinmarketcap", "coingecko"]:
-        raise argparse.ArgumentTypeError(f"Unknown/Unsupported provider supplied: '{provider}'")
+    if provider not in [PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO]:
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported provider. Received: '{provider}'")
     return provider
 
 def _validate_currency(value: str) -> str:
@@ -227,7 +229,7 @@ def _validate_currency(value: str) -> str:
     currency = value.upper()
 
     if currency not in CURRENCY_SYMBOL_MAP:
-        raise argparse.ArgumentTypeError(f"Unknown/Unsupported currency supplied: '{currency}'")
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported currency. Received '{currency}'")
     return currency
 
 def _validate_tickers(tickers: List[str]) -> None:
@@ -242,7 +244,7 @@ def _validate_tickers(tickers: List[str]) -> None:
     invalid_tickers = [t for t in tickers if t not in SUPPORTED_CRYPTO_TICKERS]
     
     if invalid_tickers:
-        raise argparse.ArgumentTypeError(f"Unknown/Unsupported ticker(s): {', '.join(invalid_tickers)}")
+        raise argparse.ArgumentTypeError(f"Unknown/Unsupported ticker(s). Received: {', '.join(invalid_tickers)}")
 
 def _create_api_config(provider: str) -> APIConfig:
     """

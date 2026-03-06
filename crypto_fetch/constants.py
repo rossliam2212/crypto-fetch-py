@@ -1,4 +1,4 @@
-from colorama import Fore, Style
+from colorama import Fore, Style # type: ignore
 from typing import Final
 
 # =========================================================================================================
@@ -6,6 +6,15 @@ from typing import Final
 # =========================================================================================================
 CF_NAME: Final[str] = "crypto-fetch"
 CF_VERSION: Final[str] = "1.0.0"
+CF_LOGGER: Final[str] = "crypto_fetch"
+
+PROVIDER_COINMARKETCAP: Final[str] = "coinmarketcap"
+PROVIDER_COINGECKO: Final[str] = "coingecko"
+
+CONFIG_KEY_PROVIDER_NAME: Final[str] = "name"
+CONFIG_KEY_PROVIDER_ENV_VAR: Final[str] = "env_var"
+CONFIG_KEY_PROVIDER_BASE_URL: Final[str] = "base_url"
+CONFIG_KEY_PROVIDER_PRICE_EP: Final[str] = "price_ep"
 
 # =========================================================================================================
 # Command Configuration
@@ -13,6 +22,7 @@ CF_VERSION: Final[str] = "1.0.0"
 CMD_PRICE: Final[str] = "price"
 CMD_CONVERT: Final[str] = "convert"
 CMD_CONFIG: Final[str] = "config"
+CMD_CONFIG_INIT: Final[str] = "init"
 
 # =========================================================================================================
 # Currency Configuration (Map of all supported fiat currencies [code -> symbol])
@@ -77,16 +87,13 @@ CG_COIN_ID_MAP = {
 }
 
 # =========================================================================================================
-# Display Configuration
-# =========================================================================================================
-RED_OUTPUT = Fore.RED
-GREEN_OUTPUT = Fore.GREEN
-BOLD_OUTPUT = Style.BRIGHT
-RESET_OUTPUT = Style.RESET_ALL
-
-# =========================================================================================================
-# Formatting Configuration
+# Formatting / Display Configuration
 # =========================================================================================================
 PRECISION_HIGH: Final[int] = 2
 PRECISION_MEDIUM: Final[int] = 1
 PRECISION_LOW: Final[int] = 0
+
+RED_OUTPUT = Fore.RED
+GREEN_OUTPUT = Fore.GREEN
+BOLD_OUTPUT = Style.BRIGHT
+RESET_OUTPUT = Style.RESET_ALL

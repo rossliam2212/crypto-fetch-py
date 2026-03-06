@@ -1,8 +1,10 @@
 import os
 import logging
-import yaml
+import yaml # type: ignore
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+from crypto_fetch.constants import CF_LOGGER
 
 CONFIG_DIR = Path.home() / ".crypto-fetch-py"
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
@@ -31,7 +33,7 @@ DEFAULT_CONFIG = {
     }
 }
 
-logger = logging.getLogger("crypto_fetch")
+logger = logging.getLogger(CF_LOGGER)
 
 def init_api_config_file() -> None:
     """

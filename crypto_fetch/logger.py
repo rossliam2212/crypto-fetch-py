@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from crypto_fetch.constants import CF_LOGGER
+
 class LogLevelFormatter(logging.Formatter):
     """Custom formatter that uses differnt formats based on log level"""
     def __init__(self, fmt_info: str, fmt_debug: str):
@@ -20,7 +22,7 @@ def setup_logger(debug: bool = False) -> logging.Logger:
     :param debug: Whether debug logging should be enabled or not.
     :return: the configured logger instance.
     """
-    logger = logging.getLogger("crypto_fetch")
+    logger = logging.getLogger(CF_LOGGER)
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
     if not logger.handlers:

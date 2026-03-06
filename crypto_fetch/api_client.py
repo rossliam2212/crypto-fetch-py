@@ -1,16 +1,16 @@
 import logging
 import re
-import requests
+import requests # type: ignore
 from typing import Dict, Any, TypeVar, Generic
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from crypto_fetch.exceptions import APIError
 from crypto_fetch.config import get_api_key, get_default_api_timeout
-from crypto_fetch.constants import CG_COIN_ID_MAP
+from crypto_fetch.constants import CG_COIN_ID_MAP, CF_LOGGER
 
 T = TypeVar('T')
-logger = logging.getLogger("crypto_fetch")
+logger = logging.getLogger(CF_LOGGER)
 
 @dataclass
 class APIConfig:
@@ -207,7 +207,8 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
         for ticker, data in raw_data.items():
             quote: Dict[str, Any] = data.get("quote", {}).get(currency_code, {})
-        
+            logger.debug(f"Parsed JSON response for '{ticker}': '{quote}'")
+
             result[ticker] = {
                 "price": float(quote.get("price", 0)),
                 "1h_change": float(quote.get("percent_change_1h", 0)),
@@ -284,6 +285,7 @@ class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         for ticker in tickers:
             coin_id = self._ticker_to_coin_id(ticker)
             coin_data = data.get(coin_id, {})
+            logger.debug(f"Parsed JSON response for '{coin_id}': '{coin_data}'")
             
             result[ticker.upper()] = {
                 "price": float(coin_data.get(currency_lower, 0)),
