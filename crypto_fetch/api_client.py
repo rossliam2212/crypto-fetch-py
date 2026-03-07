@@ -18,7 +18,7 @@ class APIConfig:
 
     name: str
     base_url: str
-    latest_endpoint: str
+    price_endpoint: str
     api_key_env_var: str
 
 # =========================================================================================================
@@ -101,7 +101,7 @@ class BaseAPIClient(ABC, Generic[T]):
         :raises APIError: If an error occurs fetching the response from the API.
         """
         try:
-            request_url = f"{self.config.base_url}{self.config.latest_endpoint}"
+            request_url = f"{self.config.base_url}{self.config.price_endpoint}"
             logger.debug(f"Making request to: '{request_url}'")
 
             response_timeout = get_default_api_timeout()

@@ -1,5 +1,5 @@
 from colorama import Fore, Style # type: ignore
-from typing import Final
+from typing import Final, List
 
 # =========================================================================================================
 # Application Configuration
@@ -10,11 +10,24 @@ CF_LOGGER: Final[str] = "crypto_fetch"
 
 PROVIDER_COINMARKETCAP: Final[str] = "coinmarketcap"
 PROVIDER_COINGECKO: Final[str] = "coingecko"
+PROVIDERS_SUPPORTED = [PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO] 
+
+# =========================================================================================================
+# Config Key Configuration
+# =========================================================================================================
+CONFIG_HEADER_DEFAULTS: Final[str] = "defaults"
+CONFIG_HEADER_API_KEYS: Final[str] = "api_keys"
 
 CONFIG_KEY_PROVIDER_NAME: Final[str] = "name"
 CONFIG_KEY_PROVIDER_ENV_VAR: Final[str] = "env_var"
 CONFIG_KEY_PROVIDER_BASE_URL: Final[str] = "base_url"
 CONFIG_KEY_PROVIDER_PRICE_EP: Final[str] = "price_ep"
+REQUIRED_PROVIDER_CONFIG_KEYS: Final[List[str]] = [
+    CONFIG_KEY_PROVIDER_NAME, 
+    CONFIG_KEY_PROVIDER_ENV_VAR, 
+    CONFIG_KEY_PROVIDER_BASE_URL, 
+    CONFIG_KEY_PROVIDER_PRICE_EP
+]
 
 # =========================================================================================================
 # Command Configuration
@@ -23,6 +36,8 @@ CMD_PRICE: Final[str] = "price"
 CMD_CONVERT: Final[str] = "convert"
 CMD_CONFIG: Final[str] = "config"
 CMD_CONFIG_INIT: Final[str] = "init"
+CMD_CONFIG_VALIDATE: Final[str] = "validate"
+CMD_CONFIG_RECREATE: Final[str] = "recreate"
 
 # =========================================================================================================
 # Currency Configuration (Map of all supported fiat currencies [code -> symbol])

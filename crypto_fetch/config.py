@@ -4,7 +4,8 @@ import yaml # type: ignore
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from crypto_fetch.constants import CF_LOGGER
+from crypto_fetch.constants import CF_LOGGER, CONFIG_HEADER_DEFAULTS, CONFIG_HEADER_API_KEYS
+from crypto_fetch.config_validator import validate_config
 
 CONFIG_DIR = Path.home() / ".crypto-fetch-py"
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
@@ -35,6 +36,9 @@ DEFAULT_CONFIG = {
 
 logger = logging.getLogger(CF_LOGGER)
 
+# Cache for loaded config
+_cached_config: Optional[Dict[str, Any]] = None
+
 def init_api_config_file() -> None:
     """
     Initializes the config file with the defaults.
@@ -60,16 +64,44 @@ def save_api_config_to_file(config: Dict[str, Any]) -> None:
 
 def load_api_config_from_file() -> Dict[str, Any]:
     """
-    Loads the YAML config file.
+    Loads the YAML config file with caching.
     Converts the YAML input from the config file into a dict[str, Any].
     
-    :return: the loaded config file or the deafult.
+    :return: the loaded config file or the default.
     """
+    global _cached_config
+    
+    # Return cached config if available
+    if _cached_config is not None:
+        return _cached_config
+    
     if CONFIG_FILE.exists():
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or DEFAULT_CONFIG
-        
-    return DEFAULT_CONFIG.copy()
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+                if config is None or not isinstance(config, dict):
+                    logger.warning("Config file is empty or invalid. Using defaults.")
+                    _cached_config = DEFAULT_CONFIG.copy()
+                    return _cached_config
+                
+                # Validate config (will only run once)
+                errors = validate_config(config)
+                if errors:
+                    logger.warning(f"Config has {len(errors)} issue(s). Run 'crypto-fetch config validate' for details")
+                
+                _cached_config = config
+                return config
+        except yaml.YAMLError as ex:
+            logger.error(f"API config file is corrupted: {ex}. Using defaults.")
+            _cached_config = DEFAULT_CONFIG.copy()
+            return _cached_config
+        except Exception as ex:
+            logger.error(f"Failed to load API config: {ex}. Using defaults.")
+            _cached_config = DEFAULT_CONFIG.copy()
+            return _cached_config
+    
+    _cached_config = DEFAULT_CONFIG.copy()
+    return _cached_config
 
 def get_api_key(provider: str, env_var: str) -> Optional[str]:
     """
@@ -88,7 +120,7 @@ def get_api_key(provider: str, env_var: str) -> Optional[str]:
     
     # check config file second
     config = load_api_config_from_file()
-    api_key = config.get("api_keys", {}).get(provider, "")
+    api_key = config.get(CONFIG_HEADER_API_KEYS, {}).get(provider, "")
 
     if api_key and isinstance(api_key, str):
         logger.debug(f"Found API key for '{provider}' in config file")
@@ -103,7 +135,7 @@ def get_default_fiat_currency() -> str:
     :return: the default currency.
     """
     config = load_api_config_from_file()
-    return config.get("defaults", {}).get("currency", "EUR")
+    return config.get(CONFIG_HEADER_DEFAULTS, {}).get("currency", "EUR")
 
 def get_default_api_timeout() -> int:
     """
@@ -112,7 +144,7 @@ def get_default_api_timeout() -> int:
     :return: timeout in seconds.
     """
     config = load_api_config_from_file()
-    return config.get("defaults", {}).get("api_timeout", 10)
+    return config.get(CONFIG_HEADER_DEFAULTS, {}).get("api_timeout", 10)
 
 def get_default_api_provider() -> str:
     """
@@ -121,7 +153,7 @@ def get_default_api_provider() -> str:
     :return: provider name.
     """
     config = load_api_config_from_file()
-    return config.get("defaults", {}).get("api_provider", "coinmarketcap")
+    return config.get(CONFIG_HEADER_DEFAULTS, {}).get("api_provider", "coinmarketcap")
 
 def get_api_provider_config(provider: str) -> Dict[str, str]:
     """
@@ -135,11 +167,8 @@ def get_api_provider_config(provider: str) -> Dict[str, str]:
     provider_config = config.get(provider, {})
     
     if not provider_config:
-        logger.warning(f"No config found for provider '{provider}'. Using defaults")
+        logger.warning(f"No API config found for provider '{provider}'. Using defaults")
         return DEFAULT_CONFIG.get(provider, {})
     
-    # Strip trailing commas from values
-    sanitized = {k: v.rstrip(',') if isinstance(v, str) else v for k, v in provider_config.items()}
-    
-    logger.debug(f"Loaded config: {sanitized}")
-    return sanitized
+    logger.debug(f"Loaded API config: {provider_config}")
+    return provider_config

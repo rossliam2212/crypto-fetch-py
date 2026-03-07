@@ -1,5 +1,7 @@
 import argparse
 import logging
+import sys
+import yaml  # type: ignore
 from colorama import just_fix_windows_console # type: ignore
 from datetime import datetime
 from typing import List
@@ -12,7 +14,17 @@ from crypto_fetch.formatter import format_price_output
 from crypto_fetch.formatter import format_convert_output
 from crypto_fetch.constants import *
 from crypto_fetch.logger import setup_logger
-from crypto_fetch.config import *
+from crypto_fetch.config import (
+    init_api_config_file,
+    get_default_fiat_currency,
+    get_default_api_provider,
+    get_api_provider_config,
+    load_api_config_from_file,
+    save_api_config_to_file,
+    CONFIG_FILE,
+    DEFAULT_CONFIG
+)
+from crypto_fetch.config_validator import validate_config
 
 logger = logging.getLogger(CF_LOGGER)
 
@@ -69,7 +81,7 @@ def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     price_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
     price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
     price_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
-    price_parser.add_argument("-p", "--provider", choices=["coinmarketcap", "coingecko"], default=None, help="Choose API provider (default: coinmarketcap)")
+    price_parser.add_argument("-p", "--provider", choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO], default=None, help="Choose API provider (default: coinmarketcap)")
 
 def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     """
@@ -82,7 +94,7 @@ def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
     convert_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
     convert_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
-    convert_parser.add_argument("-p", "--provider", choices=["coinmarketcap", "coingecko"], default="coinmarketcap", help="Choose API provider (default: coinmarketcap)")
+    convert_parser.add_argument("-p", "--provider", choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO], default=None, help="Choose API provider (default: coinmarketcap)")
     convert_parser.add_argument("-f", "--file", help="Portfolio file (#TODO)")
 
 def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
@@ -91,8 +103,8 @@ def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
     
     :param subparser: The subparser to add the config command to.
     """
-    config_parser = subparser.add_parser(CMD_CONFIG, help="Initialize config file")
-    config_parser.add_argument("action", choices=[CMD_CONFIG_INIT], help="Config action")
+    config_parser = subparser.add_parser(CMD_CONFIG, help="Manage configuration")
+    config_parser.add_argument("action", choices=[CMD_CONFIG_INIT, CMD_CONFIG_VALIDATE, CMD_CONFIG_RECREATE], help="Config action")
 
 def _handle_price_command(args: argparse.Namespace, client: BaseAPIClient):
     """
@@ -141,9 +153,7 @@ def _validate_parsed_commands(args: argparse.Namespace) -> argparse.Namespace:
 
     # handle config command & initialization
     if args.command == CMD_CONFIG:
-        if args.action == CMD_CONFIG_INIT:
-            init_api_config_file()
-        return None
+        _handle_config_command_action(args.action)
     
     # validate currency or get default
     if args.currency is None:
@@ -170,6 +180,16 @@ def _validate_parsed_commands(args: argparse.Namespace) -> argparse.Namespace:
         _validate_tickers([args.ticker])
     
     return args
+
+def _handle_config_command_action(action: str) -> None:
+    if action == CMD_CONFIG_INIT:
+        init_api_config_file()
+    elif action == CMD_CONFIG_VALIDATE:
+        exit_code = _validate_config_file()
+        import sys
+        sys.exit(exit_code)
+    elif args.action == CMD_CONFIG_RECREATE:
+        _recreate_config_file()
 
 def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
     """
@@ -257,10 +277,10 @@ def _create_api_config(provider: str) -> APIConfig:
     config = get_api_provider_config(provider)
     
     return APIConfig(
-        name=config.get("name", provider),
-        base_url=config.get("base_url", ""),
-        latest_endpoint=config.get("price_ep", ""),
-        api_key_env_var=config.get("env_var", ""),
+        name=config.get(CONFIG_KEY_PROVIDER_NAME, provider),
+        base_url=config.get(CONFIG_KEY_PROVIDER_BASE_URL, ""),
+        price_endpoint=config.get(CONFIG_KEY_PROVIDER_PRICE_EP, ""),
+        api_key_env_var=config.get(CONFIG_KEY_PROVIDER_ENV_VAR, ""),
     )
 
 def _get_date() -> str:
@@ -280,3 +300,51 @@ def _add_dollar_symbol_to_tickers(tickers: List[str]) -> str:
     :return: A comma separated str of tickers with the '$' prefix.
     """
     return ",".join(f"${ticker}" for ticker in tickers)
+
+
+def _validate_config_file() -> int:
+    """Validates the configuration file and reports errors.
+    
+    :returns: 0 if valid, 1 if invalid
+    """
+    # Load config directly without fallback to defaults
+    if not CONFIG_FILE.exists():
+        logger.error("Config file not found. Run 'crypto-fetch config init' to create")
+        return 1
+    
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+            
+        if config is None or not isinstance(config, dict):
+            logger.error("Config file is empty or invalid ❌")
+            logger.info("Run 'crypto-fetch config recreate' to restore defaults")
+            return 1
+    except yaml.YAMLError as ex:
+        logger.error(f"Config file has YAML syntax errors: {ex} ❌")
+        logger.info("Run 'crypto-fetch config recreate' to restore defaults")
+        return 1
+    except Exception as ex:
+        logger.error(f"Failed to read config file: {ex} ❌")
+        return 1
+    
+    # Validate the loaded config
+    errors = validate_config(config)
+    
+    if not errors:
+        logger.info("API config is valid ✅")
+        return 0
+    
+    logger.error("API config validation failed ❌")
+    for error in errors:
+        logger.error(f"  - {error}")
+    
+    logger.info("\nRun 'crypto-fetch config recreate' to restore defaults")
+    return 1
+
+def _recreate_config_file() -> None:
+    """Recreates the config file with defaults."""
+    logger.info("Recreating config file with defaults...")
+    save_api_config_to_file(DEFAULT_CONFIG)
+    logger.info(f"Config file recreated at: '{CONFIG_FILE}' ✅")
+    logger.info("*** Remember to add your API keys ***")

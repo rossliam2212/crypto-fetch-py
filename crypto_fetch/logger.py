@@ -11,7 +11,7 @@ class LogLevelFormatter(logging.Formatter):
         self.fmt_debug = logging.Formatter(fmt_debug)
 
     def format(self, record):
-        if record.levelno == logging.DEBUG or record.levelno == logging.ERROR:
+        if record.levelno == logging.DEBUG or record.levelno == logging.ERROR or record.levelno == logging.WARNING:
             return self.fmt_debug.format(record)
         return self.fmt_info.format(record)
 
