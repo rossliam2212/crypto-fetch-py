@@ -154,6 +154,7 @@ def _validate_parsed_commands(args: argparse.Namespace) -> argparse.Namespace:
     # handle config command & initialization
     if args.command == CMD_CONFIG:
         _handle_config_command_action(args.action)
+        return None
     
     # validate currency or get default
     if args.currency is None:
@@ -188,7 +189,7 @@ def _handle_config_command_action(action: str) -> None:
         exit_code = _validate_config_file()
         import sys
         sys.exit(exit_code)
-    elif args.action == CMD_CONFIG_RECREATE:
+    elif action == CMD_CONFIG_RECREATE:
         _recreate_config_file()
 
 def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
