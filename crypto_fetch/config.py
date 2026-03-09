@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 from crypto_fetch.constants import CF_LOGGER, CONFIG_HEADER_DEFAULTS, CONFIG_HEADER_API_KEYS
+from crypto_fetch.constants import PROVIDER_COINMARKETCAP, CONFIG_DEFAULTS_CURRENCY, CONFIG_DEFAULTS_API_TIMEOUT
+from crypto_fetch.constants import CONFIG_KEY_DEFAULTS_CURRENCY, CONFIG_KEY_DEFAULTS_API_TIMEOUT, CONFIG_KEY_DEFAULTS_API_PROVIDER
 from crypto_fetch.config_validator import validate_config
 
 CONFIG_DIR = Path.home() / ".crypto-fetch-py"
@@ -16,9 +18,9 @@ DEFAULT_CONFIG = {
         "coingecko": ""
     },
     "defaults": {
-        "currency": "EUR",
-        "api_provider": "coinmarketcap",
-        "api_timeout": 10
+        "currency": CONFIG_DEFAULTS_CURRENCY,
+        "api_provider": PROVIDER_COINMARKETCAP,
+        "api_timeout": CONFIG_DEFAULTS_API_TIMEOUT
     },
     "coinmarketcap": {
         "name": "coinmarketcap",
@@ -135,7 +137,7 @@ def get_default_fiat_currency() -> str:
     :return: the default currency.
     """
     config = load_api_config_from_file()
-    return config.get(CONFIG_HEADER_DEFAULTS, {}).get("currency", "EUR")
+    return config.get(CONFIG_HEADER_DEFAULTS, {}).get(CONFIG_KEY_DEFAULTS_CURRENCY, CONFIG_DEFAULTS_CURRENCY)
 
 def get_default_api_timeout() -> int:
     """
@@ -144,7 +146,7 @@ def get_default_api_timeout() -> int:
     :return: timeout in seconds.
     """
     config = load_api_config_from_file()
-    return config.get(CONFIG_HEADER_DEFAULTS, {}).get("api_timeout", 10)
+    return config.get(CONFIG_HEADER_DEFAULTS, {}).get(CONFIG_KEY_DEFAULTS_API_TIMEOUT, CONFIG_DEFAULTS_API_TIMEOUT)
 
 def get_default_api_provider() -> str:
     """
@@ -153,7 +155,7 @@ def get_default_api_provider() -> str:
     :return: provider name.
     """
     config = load_api_config_from_file()
-    return config.get(CONFIG_HEADER_DEFAULTS, {}).get("api_provider", "coinmarketcap")
+    return config.get(CONFIG_HEADER_DEFAULTS, {}).get(CONFIG_KEY_DEFAULTS_API_PROVIDER, PROVIDER_COINMARKETCAP)
 
 def get_api_provider_config(provider: str) -> Dict[str, str]:
     """

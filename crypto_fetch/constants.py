@@ -28,6 +28,12 @@ REQUIRED_PROVIDER_CONFIG_KEYS: Final[List[str]] = [
     CONFIG_KEY_PROVIDER_BASE_URL, 
     CONFIG_KEY_PROVIDER_PRICE_EP
 ]
+CONFIG_KEY_DEFAULTS_CURRENCY: Final[str] = "currency"
+CONFIG_KEY_DEFAULTS_API_TIMEOUT: Final[str] = "api_timeout"
+CONFIG_KEY_DEFAULTS_API_PROVIDER: Final[str] = "api_provider"
+
+CONFIG_DEFAULTS_CURRENCY: Final[str] = "EUR"
+CONFIG_DEFAULTS_API_TIMEOUT: Final[int] = 10
 
 # =========================================================================================================
 # Command Configuration
