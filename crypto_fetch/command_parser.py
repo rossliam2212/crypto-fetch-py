@@ -281,7 +281,6 @@ def _create_api_config(provider: str) -> APIConfig:
         name=config.get(CONFIG_KEY_PROVIDER_NAME, provider),
         base_url=config.get(CONFIG_KEY_PROVIDER_BASE_URL, ""),
         price_endpoint=config.get(CONFIG_KEY_PROVIDER_PRICE_EP, ""),
-        api_key_env_var=config.get(CONFIG_KEY_PROVIDER_ENV_VAR, ""),
     )
 
 def _get_date() -> str:

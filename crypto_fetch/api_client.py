@@ -19,7 +19,6 @@ class APIConfig:
     name: str
     base_url: str
     price_endpoint: str
-    api_key_env_var: str
 
 # =========================================================================================================
 # BaseAPIClient
@@ -130,7 +129,7 @@ class BaseAPIClient(ABC, Generic[T]):
         :raises APIError: If the API is not found.
         """
         logger.debug("Checking for API key...")
-        api_key = get_api_key(self.config.name, self.config.api_key_env_var)
+        api_key = get_api_key(self.config.name)
 
         if api_key is None:
             raise APIError(f"API key not found. Either add key to env variable or run: crypto-fetch config init")

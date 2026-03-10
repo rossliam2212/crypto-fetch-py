@@ -24,13 +24,11 @@ DEFAULT_CONFIG = {
     },
     "coinmarketcap": {
         "name": "coinmarketcap",
-        "env_var": "COINMARKETCAP_API_KEY",
         "base_url": "https://pro-api.coinmarketcap.com/v1",
         "price_ep": "/cryptocurrency/quotes/latest"
     },
     "coingecko": {
         "name": "coingecko",
-        "env_var": "COINGECKO_API_KEY",
         "base_url": "https://api.coingecko.com/api/v3/",
         "price_ep": "/simple/price"
     }
@@ -105,24 +103,16 @@ def load_api_config_from_file() -> Dict[str, Any]:
     _cached_config = DEFAULT_CONFIG.copy()
     return _cached_config
 
-def get_api_key(provider: str, env_var: str) -> Optional[str]:
+def get_api_key(provider: str) -> Optional[str]:
     """
-    Gets the API key from the config file or env variable.
+    Gets the API key from the config file.
     
     :param provider: The provider to get the API key for.
-    :param env_var: The env variable the API key may be set.
 
     :return: the api key or None.
     """
-    # check env variable first
-    api_key = os.getenv(env_var)
-    if api_key:
-        logger.debug(f"Found API key for '{provider}' in env variable '{env_var}'")
-        return api_key.strip()
-    
-    # check config file second
     config = load_api_config_from_file()
-    api_key = config.get(CONFIG_HEADER_API_KEYS, {}).get(provider, "")
+    api_key = config.get(CONFIG_HEADER_API_KEYS, {}).get(provider, PROVIDER_COINMARKETCAP)
 
     if api_key and isinstance(api_key, str):
         logger.debug(f"Found API key for '{provider}' in config file")
