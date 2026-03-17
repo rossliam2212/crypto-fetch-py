@@ -1,15 +1,16 @@
-from typing import Any
 import logging
 import sys
+
 import yaml  # type: ignore
 
 from crypto_fetch.command import Command
-from crypto_fetch.constants import CF_LOGGER, CMD_CONFIG_INIT, CMD_CONFIG_VALIDATE, CMD_CONFIG_RECREATE
-from crypto_fetch.config import CONFIG_FILE, init_api_config_file, save_api_config_to_file, DEFAULT_CONFIG
+from crypto_fetch.config import CONFIG_FILE, DEFAULT_CONFIG, init_api_config_file, save_api_config_to_file
 from crypto_fetch.config_validator import validate_config
+from crypto_fetch.constants import CF_LOGGER, CMD_CONFIG_INIT, CMD_CONFIG_RECREATE, CMD_CONFIG_VALIDATE
 from crypto_fetch.exceptions import ConfigError
 
 logger = logging.getLogger(CF_LOGGER)
+
 
 class ConfigCommand(Command):
     """Manage config file"""
@@ -18,10 +19,11 @@ class ConfigCommand(Command):
         super().__init__(client=None)
         self.action = action
 
-    def validate(self) -> None:
+    def _validate(self) -> None:
         pass
 
-    def execute(self) -> Any:
+    def _execute(self) -> None:
+        logger.debug(f"Executing config action: '{self.action}'")
         if self.action == CMD_CONFIG_INIT:
             init_api_config_file()
         elif self.action == CMD_CONFIG_VALIDATE:

@@ -1,16 +1,18 @@
 import logging
 import re
-import requests # type: ignore
-from typing import Dict, Any, TypeVar, Generic
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Dict, Generic, TypeVar
 
-from crypto_fetch.exceptions import APIError
+import requests  # type: ignore
+
 from crypto_fetch.config import get_api_key, get_default_api_timeout
-from crypto_fetch.constants import CG_COIN_ID_MAP, CF_LOGGER
+from crypto_fetch.constants import CF_LOGGER, CG_COIN_ID_MAP
+from crypto_fetch.exceptions import APIError
 
 T = TypeVar('T')
 logger = logging.getLogger(CF_LOGGER)
+
 
 @dataclass
 class APIConfig:
@@ -62,16 +64,16 @@ class BaseAPIClient(ABC, Generic[T]):
         
         :param api_key: The API key.
 
-        :return: A dict containing the requst headers.
+        :return: A dict containing the request headers.
         """
         pass
 
     @abstractmethod
     def _get_request_params(self, tickers: str, currency_code: str) -> Dict[str, str]:
         """
-        Gets the paramters for a request to the API.
+        Gets the parameters for a request to the API.
 
-        :param tickers: A single / comma-separted list of tickers as a str.
+        :param tickers: A single / comma-separated list of tickers as a str.
         :param currency_code: The fiat currency code.
 
         :return: A dict containing the request parameters.
@@ -91,7 +93,7 @@ class BaseAPIClient(ABC, Generic[T]):
 
     def _make_request(self, headers: Dict[str, str], params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Makes a requst to the API.
+        Makes a request to the API.
 
         :param headers: The request headers.
         :param params: The request parameters.
@@ -136,9 +138,10 @@ class BaseAPIClient(ABC, Generic[T]):
 
         api_key = api_key.strip()
         if api_key.startswith('"') or api_key.startswith("'"):
-            raise APIError(f"API key contains quotes. Remove quotes from API key in env variable or config file")
+            raise APIError(f"API key contains quotes. Remove quotes from API key in config file")
         
         self._validate_api_key_format(api_key)
+        logger.debug("API key validation was successful")
         return api_key
         
     @abstractmethod
@@ -149,6 +152,7 @@ class BaseAPIClient(ABC, Generic[T]):
         :param api_key: The API key.
         """
         pass
+
 
 # =========================================================================================================
 # CoinMarketCapAPIClient
@@ -225,7 +229,8 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
         if not re.match(r'^[a-zA-Z0-9-]+$', api_key):
             raise APIError(f"Invalid characters detected in {self.config.name} API key")
-    
+
+
 # =========================================================================================================
 # CoinGeckoAPIClient
 # =========================================================================================================
@@ -314,5 +319,5 @@ class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         if not coin_id:
             logger.warning(f"Ticker '{ticker}' not in mapping. Using lowercase as ID")
             return ticker.lower()
-        
+
         return coin_id

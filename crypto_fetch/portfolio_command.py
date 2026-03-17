@@ -1,14 +1,14 @@
-from typing import Any
 import logging
-import yaml  # type: ignore
 from pathlib import Path
+
+import yaml  # type: ignore
 
 from crypto_fetch.api_client import BaseAPIClient
 from crypto_fetch.command import Command
-from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
+from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers
+from crypto_fetch.config import get_default_api_provider, get_default_fiat_currency
 from crypto_fetch.constants import CF_LOGGER
-from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
-from crypto_fetch.exceptions import CommandError, ConfigError
+from crypto_fetch.exceptions import CommandError
 from crypto_fetch.formatter import format_portfolio_output
 
 logger = logging.getLogger(CF_LOGGER)
@@ -24,7 +24,7 @@ class PortfolioCommand(Command):
         self.provider = provider
         self.holdings: dict[str, float] = {}
 
-    def validate(self) -> None:
+    def _validate(self) -> None:
         logger.debug(f"Validating parsed arguments for portfolio command")
 
         if not self.portfolio_file.exists():
@@ -41,6 +41,7 @@ class PortfolioCommand(Command):
             for line in content.splitlines():
                 line = line.strip()
                 if not line or line.startswith("#"):
+                    logger.debug(f"Skipping line: {line}")
                     continue
                 parts = line.split()
                 if len(parts) != 2:
@@ -51,6 +52,7 @@ class PortfolioCommand(Command):
             raise CommandError("Portfolio file is empty")
 
         self.holdings = {k.upper(): float(v) for k, v in data.items()}
+        logger.debug(f"Loaded holdings from file: '{self.portfolio_file}'. Holdings: {self.holdings}")
         validate_tickers(list(self.holdings.keys()))
 
         if self.currency is None:
@@ -65,7 +67,7 @@ class PortfolioCommand(Command):
 
         logger.debug(f"Validated arguments successfully")
 
-    def execute(self) -> Any:
+    def _execute(self) -> None:
         tickers = ",".join(self.holdings.keys())
         price_data = self.client.fetch_multiple_price_data(tickers, self.currency)
 

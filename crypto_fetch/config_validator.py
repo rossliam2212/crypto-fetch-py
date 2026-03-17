@@ -1,11 +1,16 @@
-from typing import Dict, Any, List
 import logging
+from typing import Any, Dict, List
 
-from crypto_fetch.constants import CF_LOGGER, PROVIDERS_SUPPORTED
-from crypto_fetch.constants import CONFIG_HEADER_DEFAULTS, CONFIG_HEADER_API_KEYS
-from crypto_fetch.constants import REQUIRED_PROVIDER_CONFIG_KEYS
+from crypto_fetch.constants import (
+    CF_LOGGER,
+    CONFIG_HEADER_API_KEYS,
+    CONFIG_HEADER_DEFAULTS,
+    PROVIDERS_SUPPORTED,
+    REQUIRED_PROVIDER_CONFIG_KEYS,
+)
 
 logger = logging.getLogger(CF_LOGGER)
+
 
 def validate_config(config: Dict[str, Any]) -> List[str]:
     """

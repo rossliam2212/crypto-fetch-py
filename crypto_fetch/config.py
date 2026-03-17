@@ -1,13 +1,21 @@
-import os
 import logging
-import yaml # type: ignore
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
-from crypto_fetch.constants import CF_LOGGER, CONFIG_HEADER_DEFAULTS, CONFIG_HEADER_API_KEYS
-from crypto_fetch.constants import PROVIDER_COINMARKETCAP, CONFIG_DEFAULTS_CURRENCY, CONFIG_DEFAULTS_API_TIMEOUT
-from crypto_fetch.constants import CONFIG_KEY_DEFAULTS_CURRENCY, CONFIG_KEY_DEFAULTS_API_TIMEOUT, CONFIG_KEY_DEFAULTS_API_PROVIDER
+import yaml  # type: ignore
+
 from crypto_fetch.config_validator import validate_config
+from crypto_fetch.constants import (
+    CF_LOGGER,
+    CONFIG_DEFAULTS_API_TIMEOUT,
+    CONFIG_DEFAULTS_CURRENCY,
+    CONFIG_HEADER_API_KEYS,
+    CONFIG_HEADER_DEFAULTS,
+    CONFIG_KEY_DEFAULTS_API_PROVIDER,
+    CONFIG_KEY_DEFAULTS_API_TIMEOUT,
+    CONFIG_KEY_DEFAULTS_CURRENCY,
+    PROVIDER_COINMARKETCAP,
+)
 
 CONFIG_DIR = Path.home() / ".crypto-fetch-py"
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
@@ -39,6 +47,7 @@ logger = logging.getLogger(CF_LOGGER)
 # Cache for loaded config
 _cached_config: Optional[Dict[str, Any]] = None
 
+
 def init_api_config_file() -> None:
     """
     Initializes the config file with the defaults.
@@ -51,7 +60,8 @@ def init_api_config_file() -> None:
     save_api_config_to_file(DEFAULT_CONFIG)
     logger.info(f"Created config file at: '{CONFIG_FILE}'")
     logger.info(f"Edit this file to add you API keys and set defaults")
-    
+
+
 def save_api_config_to_file(config: Dict[str, Any]) -> None:
     """
     Saves configuration to the config file.
@@ -61,6 +71,7 @@ def save_api_config_to_file(config: Dict[str, Any]) -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False)
+
 
 def load_api_config_from_file() -> Dict[str, Any]:
     """
@@ -103,6 +114,7 @@ def load_api_config_from_file() -> Dict[str, Any]:
     _cached_config = DEFAULT_CONFIG.copy()
     return _cached_config
 
+
 def get_api_key(provider: str) -> Optional[str]:
     """
     Gets the API key from the config file.
@@ -119,7 +131,8 @@ def get_api_key(provider: str) -> Optional[str]:
         return api_key.strip()
     else:
         return None
-    
+
+
 def get_default_fiat_currency() -> str:
     """
     Gets the default currency set in the config file
@@ -128,6 +141,7 @@ def get_default_fiat_currency() -> str:
     """
     config = load_api_config_from_file()
     return config.get(CONFIG_HEADER_DEFAULTS, {}).get(CONFIG_KEY_DEFAULTS_CURRENCY, CONFIG_DEFAULTS_CURRENCY)
+
 
 def get_default_api_timeout() -> int:
     """
@@ -138,6 +152,7 @@ def get_default_api_timeout() -> int:
     config = load_api_config_from_file()
     return config.get(CONFIG_HEADER_DEFAULTS, {}).get(CONFIG_KEY_DEFAULTS_API_TIMEOUT, CONFIG_DEFAULTS_API_TIMEOUT)
 
+
 def get_default_api_provider() -> str:
     """
     Gets the default API provider from config.
@@ -146,6 +161,7 @@ def get_default_api_provider() -> str:
     """
     config = load_api_config_from_file()
     return config.get(CONFIG_HEADER_DEFAULTS, {}).get(CONFIG_KEY_DEFAULTS_API_PROVIDER, PROVIDER_COINMARKETCAP)
+
 
 def get_api_provider_config(provider: str) -> Dict[str, str]:
     """

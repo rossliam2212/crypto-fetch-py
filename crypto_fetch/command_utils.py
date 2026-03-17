@@ -1,14 +1,14 @@
 from datetime import datetime
+import logging
 from pathlib import Path
 from typing import List
-import logging
 
 from crypto_fetch.constants import (
-    CF_LOGGER, 
+    CF_LOGGER,
     CURRENCY_SYMBOL_MAP,
+    DATE_TIME_FORMAT,
     PROVIDERS_SUPPORTED,
     SUPPORTED_CRYPTO_TICKERS,
-    DATE_TIME_FORMAT
 )
 from crypto_fetch.exceptions import CommandError, ConfigError
 

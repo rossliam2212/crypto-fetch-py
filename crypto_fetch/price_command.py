@@ -1,15 +1,16 @@
-from typing import Any, List
 import logging
+from typing import List
 
 from crypto_fetch.api_client import BaseAPIClient
 from crypto_fetch.command import Command
-from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
+from crypto_fetch.command_utils import get_timestamp, validate_currency, validate_provider, validate_tickers
+from crypto_fetch.config import get_default_api_provider, get_default_fiat_currency
 from crypto_fetch.constants import CF_LOGGER
-from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
 from crypto_fetch.exceptions import CommandError
 from crypto_fetch.formatter import format_price_output
 
 logger = logging.getLogger(CF_LOGGER)
+
 
 class PriceCommand(Command):
     """Fetch cryptocurrency prices"""
@@ -23,7 +24,7 @@ class PriceCommand(Command):
         self.verbose = verbose
         self.show_date = show_date
 
-    def validate(self) -> None:
+    def _validate(self) -> None:
         logger.debug(f"Validating parsed arguments for price command")
 
         if self.currency is None:
@@ -44,10 +45,11 @@ class PriceCommand(Command):
         logger.debug(f"Validated arguments successfully")
         
     
-    def execute(self) -> Any:
+    def _execute(self) -> None:
+        logger.debug(f"Executing price command for ticker(s): '{self.ticker_list}', currency: '{self.currency}'")
         logger.info(f"FETCHING PRICE DATA FOR TICKER(S): {','.join(f'${t}' for t in self.ticker_list)}...")
+
         if self.show_date:
             logger.info(f"Timestamp: {get_timestamp()}")
-
         data = self.client.fetch_multiple_price_data(",".join(self.ticker_list), self.currency)
         logger.info(format_price_output(data, self.currency, self.client.config.base_url, self.verbose))

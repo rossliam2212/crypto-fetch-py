@@ -1,15 +1,16 @@
 import argparse
 import logging
+
 from colorama import just_fix_windows_console # type: ignore
 
-from crypto_fetch.api_client import APIConfig, BaseAPIClient, CoinMarketCapAPIClient, CoinGeckoAPIClient
-from crypto_fetch.constants import *
-from crypto_fetch.logger import setup_logger
+from crypto_fetch.api_client import APIConfig, BaseAPIClient, CoinGeckoAPIClient, CoinMarketCapAPIClient
 from crypto_fetch.config import get_api_provider_config, get_default_api_provider
-from crypto_fetch.price_command import PriceCommand
-from crypto_fetch.convert_command import ConvertCommand
 from crypto_fetch.config_command import ConfigCommand
+from crypto_fetch.constants import *
+from crypto_fetch.convert_command import ConvertCommand
+from crypto_fetch.logger import setup_logger
 from crypto_fetch.portfolio_command import PortfolioCommand
+from crypto_fetch.price_command import PriceCommand
 
 logger = logging.getLogger(CF_LOGGER)
 

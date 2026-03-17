@@ -1,21 +1,23 @@
 import math
 from typing import Dict, List
 
-from rich.table import Table
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich import box
+from rich.table import Table
 
-from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
-from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
-from crypto_fetch.constants import BOLD_OUTPUT
-from crypto_fetch.constants import RESET_OUTPUT
-from crypto_fetch.constants import RED_OUTPUT
-from crypto_fetch.constants import GREEN_OUTPUT
-from crypto_fetch.constants import PRECISION_HIGH
-from crypto_fetch.constants import PRECISION_MEDIUM
-from crypto_fetch.constants import PRECISION_LOW
 from crypto_fetch.command_utils import get_timestamp
+from crypto_fetch.constants import (
+    BOLD_OUTPUT,
+    CURRENCY_CODE_ONLY_MAP,
+    CURRENCY_SYMBOL_MAP,
+    GREEN_OUTPUT,
+    PRECISION_HIGH,
+    PRECISION_LOW,
+    PRECISION_MEDIUM,
+    RED_OUTPUT,
+    RESET_OUTPUT,
+)
 
 def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
     """

@@ -1,16 +1,15 @@
-import argparse
-from typing import Any, Dict, List
 import logging
 
 from crypto_fetch.api_client import BaseAPIClient
 from crypto_fetch.command import Command
-from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
+from crypto_fetch.command_utils import get_timestamp, validate_currency, validate_provider, validate_tickers
+from crypto_fetch.config import get_default_api_provider, get_default_fiat_currency
 from crypto_fetch.constants import CF_LOGGER
-from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
 from crypto_fetch.exceptions import CommandError
 from crypto_fetch.formatter import format_convert_output
 
 logger = logging.getLogger(CF_LOGGER)
+
 
 class ConvertCommand(Command):
     """Convert cryptocurrency to fiat currency."""
@@ -24,7 +23,8 @@ class ConvertCommand(Command):
         self.provider = provider
         self.show_date = show_date
 
-    def validate(self) -> None:
+
+    def _validate(self) -> None:
         logger.debug(f"Validating parsed arguments for convert command")
 
         try:
@@ -50,12 +50,25 @@ class ConvertCommand(Command):
 
         logger.debug(f"Validated arguments successfully")
 
-    def execute(self) -> Any:
+
+    def _execute(self) -> None:
+        logger.debug(f"Executing convert command: amount='{self.amount_to_convert}', ticker='{self.ticker}', currency='{self.currency}'")
         logger.info(f"CONVERTING {self.amount_to_convert} ${self.ticker} to {self.currency}...")
+
         if self.show_date:
             logger.info(f"Timestamp: {get_timestamp()}")
 
         price: float = self.client.fetch_single_price_data(self.ticker, self.currency)
 
-        converted_amount: float = self.amount_to_convert * price
+        converted_amount: float = self._calculate_conversion(price)
         logger.info(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount))
+
+
+    def _calculate_conversion(self, fetched_crypto_price: float) -> float:
+        """
+        Calculates conversion between supplied amount and the fetched crypto price.
+
+        :param fetched_crypto_price: The fetched crypto price.
+        :return: the conversion amount.
+        """
+        return self.amount_to_convert * fetched_crypto_price

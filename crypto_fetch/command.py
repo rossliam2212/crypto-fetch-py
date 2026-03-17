@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
 
 from crypto_fetch.api_client import BaseAPIClient
-from crypto_fetch.exceptions import CommandError
 
 
 class Command(ABC):
@@ -12,16 +10,16 @@ class Command(ABC):
         self.client = client
 
     @abstractmethod
-    def validate(self) -> None:
+    def _validate(self) -> None:
         """
         Validate supplied command arguments.
 
         :raise CommandError: if an error occurs during validation.
         """
         pass
-    
+
     @abstractmethod
-    def execute(self) -> Any:
+    def _execute(self) -> None:
         """
         Executes the command.
 
@@ -29,6 +27,6 @@ class Command(ABC):
         """
         pass
 
-    def run(self) -> Any:
-        self.validate()
-        return self.execute()
+    def run(self) -> None:
+        self._validate()
+        self._execute()
