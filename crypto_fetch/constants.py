@@ -40,6 +40,7 @@ CONFIG_DEFAULTS_API_TIMEOUT: Final[int] = 10
 # =========================================================================================================
 CMD_PRICE: Final[str] = "price"
 CMD_CONVERT: Final[str] = "convert"
+CMD_PORTFOLIO: Final[str] = "portfolio"
 CMD_CONFIG: Final[str] = "config"
 CMD_CONFIG_INIT: Final[str] = "init"
 CMD_CONFIG_VALIDATE: Final[str] = "validate"

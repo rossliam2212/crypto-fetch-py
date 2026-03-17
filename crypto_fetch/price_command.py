@@ -1,0 +1,52 @@
+from typing import Any, List
+import logging
+
+from crypto_fetch.api_client import BaseAPIClient
+from crypto_fetch.command import Command
+from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
+from crypto_fetch.constants import CF_LOGGER
+from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
+from crypto_fetch.formatter import format_price_output
+
+logger = logging.getLogger(CF_LOGGER)
+
+class PriceCommand(Command):
+    """Fetch cryptocurrency prices"""
+
+    def __init__(self, client: BaseAPIClient, tickers: str, currency: str, provider: str, verbose: bool, show_date: bool = False):
+        super().__init__(client)
+        self.tickers_raw = tickers # ex: xrp
+        self.ticker_list: List[str] = [] # ex: ['XRP']
+        self.currency = currency
+        self.provider = provider
+        self.verbose = verbose
+        self.show_date = show_date
+
+    def validate(self) -> None:
+        logger.debug(f"Validating parsed arguments for price command")
+
+        if self.currency is None:
+            self.currency = get_default_fiat_currency()
+            logger.debug(f"Fiat currency not specified. Using default: '{self.currency}'")
+        self.currency = validate_currency(self.currency)
+
+        if self.provider is None:
+            self.provider = get_default_api_provider()
+            logger.debug(f"API provider not specified. Using default: '{self.provider}'")
+        self.provider = validate_provider(self.provider)
+
+        self.ticker_list = [t.strip().upper() for t in self.tickers_raw.split(",") if t.strip()]
+        if not self.ticker_list:
+            raise ValueError(f"No valid tickers provided. Got: {self.tickers_raw}")
+        validate_tickers(self.ticker_list)
+
+        logger.debug(f"Validated arguments successfully")
+        
+    
+    def execute(self) -> Any:
+        logger.info(f"FETCHING PRICE DATA FOR TICKER(S): {','.join(f'${t}' for t in self.ticker_list)}...")
+        if self.show_date:
+            logger.info(f"Timestamp: {get_timestamp()}")
+
+        data = self.client.fetch_multiple_price_data(",".join(self.ticker_list), self.currency)
+        logger.info(format_price_output(data, self.currency, self.client.config.base_url, self.verbose))
