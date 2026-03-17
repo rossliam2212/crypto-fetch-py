@@ -50,7 +50,7 @@ def main():
             command = PortfolioCommand(client, args.file, args.currency, args.provider)
             command.run()
     except Exception as ex:
-        logger.error(f"{args.command} command failed. Error: {ex}")
+        logger.error(f"'{args.command}' command failed. Error: {ex}")
 
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:

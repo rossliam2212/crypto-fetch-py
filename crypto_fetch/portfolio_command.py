@@ -5,9 +5,10 @@ from pathlib import Path
 
 from crypto_fetch.api_client import BaseAPIClient
 from crypto_fetch.command import Command
-from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers
+from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
 from crypto_fetch.constants import CF_LOGGER
 from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
+from crypto_fetch.exceptions import CommandError, ConfigError
 from crypto_fetch.formatter import format_portfolio_output
 
 logger = logging.getLogger(CF_LOGGER)
@@ -27,7 +28,7 @@ class PortfolioCommand(Command):
         logger.debug(f"Validating parsed arguments for portfolio command")
 
         if not self.portfolio_file.exists():
-            raise FileNotFoundError(f"Supplied portfolio file not found: '{self.portfolio_file}'")
+            raise CommandError(f"Supplied portfolio file not found: '{self.portfolio_file}'")
 
         with open(self.portfolio_file, "r") as f:
             content = f.read()
@@ -43,11 +44,11 @@ class PortfolioCommand(Command):
                     continue
                 parts = line.split()
                 if len(parts) != 2:
-                    raise ValueError(f"Invalid line in portfolio file: '{line}'")
+                    raise CommandError(f"Invalid line in portfolio file: '{line}'")
                 data[parts[0]] = parts[1]
 
         if not data:
-            raise ValueError("Portfolio file is empty")
+            raise CommandError("Portfolio file is empty")
 
         self.holdings = {k.upper(): float(v) for k, v in data.items()}
         validate_tickers(list(self.holdings.keys()))

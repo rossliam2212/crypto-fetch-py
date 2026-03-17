@@ -7,6 +7,7 @@ from crypto_fetch.command import Command
 from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
 from crypto_fetch.constants import CF_LOGGER
 from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
+from crypto_fetch.exceptions import CommandError
 from crypto_fetch.formatter import format_convert_output
 
 logger = logging.getLogger(CF_LOGGER)
@@ -29,10 +30,10 @@ class ConvertCommand(Command):
         try:
             self.amount_to_convert = float(self.amount_to_convert_str)
         except ValueError:
-            raise ValueError(f"Invalid amount: '{self.amount_to_convert_str}' is not a number")
-        
+            raise CommandError(f"Invalid amount: '{self.amount_to_convert_str}' is not a number")
+
         if self.amount_to_convert <= 0:
-            raise ValueError(f"Amount must be positive. Received: '{self.amount_to_convert}'")
+            raise CommandError(f"Amount must be positive. Received: '{self.amount_to_convert}'")
 
         if self.currency is None:
             self.currency = get_default_fiat_currency()

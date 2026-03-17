@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from typing import List
 import logging
 
@@ -6,47 +7,74 @@ from crypto_fetch.constants import (
     CF_LOGGER, 
     CURRENCY_SYMBOL_MAP,
     PROVIDERS_SUPPORTED,
-    SUPPORTED_CRYPTO_TICKERS
+    SUPPORTED_CRYPTO_TICKERS,
+    DATE_TIME_FORMAT
 )
+from crypto_fetch.exceptions import CommandError, ConfigError
 
 logger = logging.getLogger(CF_LOGGER)
 
+
 def validate_currency(value: str) -> str:
+    """
+    Validates the supplied fiat currency code.
+
+    :param value: The fiat currency code.
+    :return: The validated currency code, in uppercase.
+    :raises CommandError: If the supplied currency is not supported.
+    """
     logger.debug(f"Validating fiat currency: '{value.upper()}'")
     currency = value.upper()
     if currency not in CURRENCY_SYMBOL_MAP:
-        raise ValueError(f"Unknown/Unsupported currency. Received '{currency}'")
+        raise CommandError(f"Unknown/Unsupported currency. Received '{currency}'")
     return currency
 
 
 def validate_provider(value: str) -> str:
+    """
+    Validates the supplied API provider name.
+
+    :param value: The API provider name.
+    :return: The lowercased, validated provider name.
+    :raises CommandError: If the supplied provider is not supported.
+    """
     logger.debug(f"Validating provider: '{value.lower()}'")
     provider = value.lower()
     if provider not in PROVIDERS_SUPPORTED:
-        raise ValueError(f"Unknown/Unsupported provider. Received: '{provider}'")
+        raise CommandError(f"Unknown/Unsupported provider. Received: '{provider}'")
     return provider
 
 
 def validate_tickers(tickers: List[str]) -> None:
+    """
+    Validates a list of cryptocurrency ticker symbols.
+
+    :param tickers: List of uppercase ticker symbols (e.g. ['BTC', 'XRP']).
+    :raises CommandError: If any ticker is not supported.
+    """
     logger.debug(f"Validating supplied crypto tickers: {tickers}")
     invalid_tickers = [t for t in tickers if t not in SUPPORTED_CRYPTO_TICKERS]
     if invalid_tickers:
-        raise ValueError(f"Unknown/Unsupported ticker(s). Received: {', '.join(invalid_tickers)}")
+        raise CommandError(f"Unknown/Unsupported ticker(s). Received: {', '.join(invalid_tickers)}")
 
 
 def get_timestamp() -> str:
     """
-    Gets the current timestamp in the format: 2025-07-29 21:07:00.
+    Returns the current date and time in the format 'YYYY-MM-DD HH:MM:SS'.
 
-    :return: The current timestamp as a str.
+    :return: the current timestamp.
     """
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now().strftime(DATE_TIME_FORMAT)
 
 
-def file_exists(filepath) -> bool:
+def file_exists(filepath: Path) -> bool:
     """
-    Checks if a file exists.
+    Checks whether a file exists at the given path.
+
+    :param filepath: The path to check.
+    :return: True if the file exists.
+    :raises FileNotFoundError: If the file does not exist.
     """
     if not filepath.exists():
-        raise FileNotFoundError("Config file not found. Run 'crypto-fetch config init' to create")
+        raise ConfigError("Config file not found. Run 'crypto-fetch config init' to create")
     return True

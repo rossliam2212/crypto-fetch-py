@@ -32,7 +32,7 @@ class ConfigCommand(Command):
 
     def _handle_validate_action(self):
         if not CONFIG_FILE.exists():
-            raise FileNotFoundError("Config file not found. Run 'crypto-fetch config init' to create")
+            raise ConfigError("Config file not found. Run 'crypto-fetch config init' to create")
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)

@@ -6,6 +6,7 @@ from crypto_fetch.command import Command
 from crypto_fetch.command_utils import validate_currency, validate_provider, validate_tickers, get_timestamp
 from crypto_fetch.constants import CF_LOGGER
 from crypto_fetch.config import get_default_fiat_currency, get_default_api_provider
+from crypto_fetch.exceptions import CommandError
 from crypto_fetch.formatter import format_price_output
 
 logger = logging.getLogger(CF_LOGGER)
@@ -37,7 +38,7 @@ class PriceCommand(Command):
 
         self.ticker_list = [t.strip().upper() for t in self.tickers_raw.split(",") if t.strip()]
         if not self.ticker_list:
-            raise ValueError(f"No valid tickers provided. Got: {self.tickers_raw}")
+            raise CommandError(f"No valid tickers provided. Got: {self.tickers_raw}")
         validate_tickers(self.ticker_list)
 
         logger.debug(f"Validated arguments successfully")
