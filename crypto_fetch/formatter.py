@@ -1,6 +1,11 @@
 import math
 from typing import Dict, List
 
+from rich.table import Table
+from rich.console import Console
+from rich.panel import Panel
+from rich import box
+
 from crypto_fetch.constants import CURRENCY_SYMBOL_MAP
 from crypto_fetch.constants import CURRENCY_CODE_ONLY_MAP
 from crypto_fetch.constants import BOLD_OUTPUT
@@ -10,6 +15,7 @@ from crypto_fetch.constants import GREEN_OUTPUT
 from crypto_fetch.constants import PRECISION_HIGH
 from crypto_fetch.constants import PRECISION_MEDIUM
 from crypto_fetch.constants import PRECISION_LOW
+from crypto_fetch.command_utils import get_timestamp
 
 def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
     """
@@ -18,7 +24,7 @@ def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, a
     :param data: The parsed data received from the API.
     :param currency_code: The fiat currency code.
     :param api_url: The API URL.
-    :verbose: Whether or not the output should be verbose.
+    :param verbose: Whether the output should be verbose.
 
     :returns: Formatted output string.
     """
@@ -47,6 +53,7 @@ def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, a
 
     return "\n".join(output)
 
+
 def _get_base_price_output(price: float, ticker: str, currency_symbol: str, currency_code: str) -> str:
     """
     Gets the base output for a cryptocurrency.
@@ -65,7 +72,8 @@ def _get_base_price_output(price: float, ticker: str, currency_symbol: str, curr
         return f"🔹 ${ticker}: {BOLD_OUTPUT}{price:.4f}{currency_symbol}{RESET_OUTPUT} ({currency_code})"
     else:
         return f"🔹 ${ticker}: {BOLD_OUTPUT}{currency_symbol}{price:.4f}{RESET_OUTPUT}"
-    
+
+
 def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> List[str]:
     """
     Gets the verbose output for a cryptocurrency.
@@ -93,6 +101,7 @@ def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> Lis
 
     return verbose_details
 
+
 def format_convert_output(ticker: str, currency_code: str, amount_to_convert: float, converted_amount: float) -> str:
     """
     Formats the output for the convert command.
@@ -115,6 +124,52 @@ def format_convert_output(ticker: str, currency_code: str, amount_to_convert: fl
         output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{currency_symbol}{converted_amount:.4f}{RESET_OUTPUT}"
 
     return output
+
+
+def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Dict[str, float]], currency_code: str) -> None:
+    """
+    Renders the portfolio holdings table and summary panel.
+
+    :param holdings: Map of ticker -> amount held.
+    :param price_data: Map of ticker -> price data from API.
+    :param currency_code: The fiat currency code.
+    """
+    currency_code = currency_code.upper()
+    symbol = _get_currency_symbol(currency_code)
+
+    console = Console()
+
+    table = Table(title="Portfolio Holdings", box=box.HEAVY_HEAD, show_footer=False)
+    table.add_column("Asset", style="bold")
+    table.add_column("Holding", justify="right")
+    table.add_column("Value", justify="right")
+    table.add_column("Spot Price", justify="right")
+
+    total_value = 0.0
+    for ticker, amount in holdings.items():
+        price = price_data.get(ticker, {}).get("price", 0.0)
+        value = amount * price
+        total_value += value
+
+        if symbol in ("$", "¥"):
+            value_str = f"{symbol}{value:,.2f}"
+            price_str = f"{symbol}{price:,.2f}"
+        else:
+            value_str = f"{value:,.2f} {symbol}"
+            price_str = f"{price:,.2f} {symbol}"
+
+        table.add_row(ticker, str(amount), value_str, price_str)
+
+    console.print(table)
+
+    summary = (
+        f"Total Assets: {len(holdings)}\n"
+        f"Total Value:  {symbol}{total_value:,.2f}\n"
+        "\n"
+        f"Timestamp:    {get_timestamp()}"
+    )
+    console.print(Panel(summary, title="Portfolio Summary", expand=False))
+
 
 def _format_large_number(number: float, currency_code: str) -> str:
     """
@@ -155,6 +210,7 @@ def _format_percentage_change(change: float) -> str:
         return f"{RED_OUTPUT}▼{RESET_OUTPUT} {change:.2f}%"
     else:
         return f"{change:.2f}%"
+
 
 def _get_currency_symbol(currency: str) -> str:
     """

@@ -5,29 +5,18 @@ from colorama import just_fix_windows_console # type: ignore
 from crypto_fetch.api_client import APIConfig, BaseAPIClient, CoinMarketCapAPIClient, CoinGeckoAPIClient
 from crypto_fetch.constants import *
 from crypto_fetch.logger import setup_logger
-from crypto_fetch.config import get_api_provider_config
+from crypto_fetch.config import get_api_provider_config, get_default_api_provider
 from crypto_fetch.price_command import PriceCommand
 from crypto_fetch.convert_command import ConvertCommand
 from crypto_fetch.config_command import ConfigCommand
+from crypto_fetch.portfolio_command import PortfolioCommand
 
 logger = logging.getLogger(CF_LOGGER)
+
 
 def main():
     """
     crypto-fetch entry point
-
-    Usage:
-    - price command
-        $ crypto-fetch price XRP 
-        $ crypto-fetch price BTC,XLM -c USD
-        $ crypto-fetch price hbar --currency aud
-
-    - convert command
-        $ crypto-fetch convert 50 -t BTC
-        $ crypto-fetch convert 1000 --ticker XRP --currency CAD
-
-    - config command
-        $ crypto-fetch config init
     """
     just_fix_windows_console()
 
@@ -39,6 +28,7 @@ def main():
     _setup_price_command(subparser)
     _setup_convert_command(subparser)
     _setup_config_command(subparser)
+    _setup_portfolio_command(subparser)
 
     args: argparse.Namespace = parser.parse_args()
 
@@ -55,6 +45,9 @@ def main():
             command.run()
         elif args.command == CMD_CONFIG:
             command = ConfigCommand(args.action)
+            command.run()
+        elif args.command == CMD_PORTFOLIO:
+            command = PortfolioCommand(client, args.file, args.currency, args.provider)
             command.run()
     except Exception as ex:
         logger.error(f"{args.command} command failed. Error: {ex}")
@@ -84,16 +77,17 @@ def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
 
 
 def _setup_portfolio_command(subparser: argparse._SubParsersAction) -> None:
-    portfolio_parser = subparser.add_parser(CMD_PORTFOLIO, help="Manage configuration")
-    portfolio_parser.add_argument("-f", "--file", required=True, help="File containing the portfolio")
-    portfolio_parser.add_argument("-o", "--output", required=False, action="store_true", help="Output file")
+    portfolio_parser = subparser.add_parser(CMD_PORTFOLIO, help="Display portfolio holdings with live prices")
+    portfolio_parser.add_argument("file", help="Path to portfolio YAML file")
+    portfolio_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
+    portfolio_parser.add_argument("-p", "--provider", choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO], default=None, help="Choose API provider (default: coinmarketcap)")
 
 
 def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
     if args.command == CMD_CONFIG:
         return None
 
-    provider = getattr(args, "provider", None) or PROVIDER_COINMARKETCAP
+    provider = getattr(args, "provider", None) or get_default_api_provider()
     if provider == PROVIDER_COINGECKO:
         return CoinGeckoAPIClient(_create_api_config(PROVIDER_COINGECKO))
     return CoinMarketCapAPIClient(_create_api_config(PROVIDER_COINMARKETCAP))
