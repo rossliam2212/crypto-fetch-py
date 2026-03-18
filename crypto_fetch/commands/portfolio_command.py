@@ -19,30 +19,58 @@ class PortfolioCommand(Command):
 
     def __init__(self, client: BaseAPIClient, portfolio_file: str, currency: str, provider: str):
         super().__init__(client)
-        self.portfolio_file = Path(portfolio_file)
+        self.portfolio_file: Path = Path(portfolio_file)
         self.currency = currency
         self.provider = provider
         self.holdings: dict[str, float] = {}
 
     def _validate(self) -> None:
-        logger.debug(f"Validating parsed arguments for portfolio command")
+        logger.debug("Validating parsed arguments for portfolio command")
 
         if not self.portfolio_file.exists():
             raise CommandError(f"Supplied portfolio file not found: '{self.portfolio_file}'")
 
+        self.holdings = self._load_holdings_file()
+        logger.debug(f"Loaded {len(self.holdings)} holding(s) from '{self.portfolio_file}': {self.holdings}")
+        validate_tickers(list(self.holdings.keys()))
+
+        if self.currency is None:
+            self.currency = get_default_fiat_currency()
+            logger.debug(f"Currency not specified. Using default: '{self.currency}'")
+        self.currency = validate_currency(self.currency)
+
+        if self.provider is None:
+            self.provider = get_default_api_provider()
+            logger.debug(f"Provider not specified. Using default: '{self.provider}'")
+        self.provider = validate_provider(self.provider)
+
+        logger.debug("Arguments validated successfully")
+
+    def _load_holdings_file(self) -> dict[str, float]:
+        """
+        Parses the supplied portfolio file (YAML/txt) into a map of [ticker -> amount].
+        - YAML format: 'TICKER: amount'
+        - txt format: 'TICKER amount'
+
+        :return: Map of [ticker -> amount].
+        :raises CommandError: If the file is empty / invalid.
+        """
+        logger.debug(f"Reading portfolio file: '{self.portfolio_file}'")
         with open(self.portfolio_file, "r") as f:
             content = f.read()
 
         data = yaml.safe_load(content)
 
         if not isinstance(data, dict):
-            # try parsing space-separated format: "TICKER amount" per line
+            # If a txt file is supplied
+            logger.debug("File is not YAML dict format, attempting plain-text parsing")
             data = {}
             for line in content.splitlines():
                 line = line.strip()
                 if not line or line.startswith("#"):
-                    logger.debug(f"Skipping line: {line}")
+                    logger.debug(f"Skipping line: '{line}'")
                     continue
+                # Format: 'TICKER amount'
                 parts = line.split()
                 if len(parts) != 2:
                     raise CommandError(f"Invalid line in portfolio file: '{line}'")
@@ -51,23 +79,16 @@ class PortfolioCommand(Command):
         if not data:
             raise CommandError("Portfolio file is empty")
 
-        self.holdings = {k.upper(): float(v) for k, v in data.items()}
-        logger.debug(f"Loaded holdings from file: '{self.portfolio_file}'. Holdings: {self.holdings}")
-        validate_tickers(list(self.holdings.keys()))
-
-        if self.currency is None:
-            self.currency = get_default_fiat_currency()
-            logger.debug(f"Fiat currency not specified. Using default: '{self.currency}'")
-        self.currency = validate_currency(self.currency)
-
-        if self.provider is None:
-            self.provider = get_default_api_provider()
-            logger.debug(f"API provider not specified. Using default: '{self.provider}'")
-        self.provider = validate_provider(self.provider)
-
-        logger.debug(f"Validated arguments successfully")
+        holdings = {}
+        for k, v in data.items():
+            try:
+                holdings[k.upper()] = float(v)
+            except (ValueError, TypeError):
+                raise CommandError(f"Invalid amount for '{k}': '{v}' is not a number")
+        return holdings
 
     def _execute(self) -> None:
+        logger.debug(f"Fetching prices for {len(self.holdings)} holding(s) using provider '{self.provider}'")
         tickers = ",".join(self.holdings.keys())
         price_data = self.client.fetch_multiple_price_data(tickers, self.currency)
 

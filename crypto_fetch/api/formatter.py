@@ -19,6 +19,8 @@ from crypto_fetch.constants import (
     RESET,
 )
 
+_console = Console()
+
 def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
     """
     Formats the cryptocurrency price data received from the API.
@@ -139,7 +141,7 @@ def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Di
     currency_code = currency_code.upper()
     symbol = _get_currency_symbol(currency_code)
 
-    console = Console()
+    console = _console
 
     table = Table(title="Portfolio Holdings", box=box.HEAVY_HEAD, show_footer=False)
     table.add_column("Asset", style="bold")
