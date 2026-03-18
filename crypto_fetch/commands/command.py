@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from crypto_fetch.api_client import BaseAPIClient
+from crypto_fetch.api.api_client import BaseAPIClient
 
 
 class Command(ABC):

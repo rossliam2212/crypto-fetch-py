@@ -6,7 +6,7 @@ from typing import Any, Dict, Generic, TypeVar
 
 import requests  # type: ignore
 
-from crypto_fetch.config import get_api_key, get_default_api_timeout
+from crypto_fetch.config.config import get_api_key, get_default_api_timeout
 from crypto_fetch.constants import CF_LOGGER, CG_COIN_ID_MAP
 from crypto_fetch.exceptions import APIError
 

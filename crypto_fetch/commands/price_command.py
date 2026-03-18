@@ -1,13 +1,13 @@
 import logging
 from typing import List
 
-from crypto_fetch.api_client import BaseAPIClient
-from crypto_fetch.command import Command
-from crypto_fetch.command_utils import get_timestamp, validate_currency, validate_provider, validate_tickers
-from crypto_fetch.config import get_default_api_provider, get_default_fiat_currency
+from crypto_fetch.api.api_client import BaseAPIClient
+from crypto_fetch.commands.command import Command
+from crypto_fetch.commands.command_utils import get_timestamp, validate_currency, validate_provider, validate_tickers
+from crypto_fetch.config.config import get_default_api_provider, get_default_fiat_currency
 from crypto_fetch.constants import CF_LOGGER
 from crypto_fetch.exceptions import CommandError
-from crypto_fetch.formatter import format_price_output
+from crypto_fetch.api.formatter import format_price_output
 
 logger = logging.getLogger(CF_LOGGER)
 

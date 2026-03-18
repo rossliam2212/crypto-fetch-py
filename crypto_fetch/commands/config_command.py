@@ -3,9 +3,9 @@ import sys
 
 import yaml  # type: ignore
 
-from crypto_fetch.command import Command
-from crypto_fetch.config import CONFIG_FILE, DEFAULT_CONFIG, init_api_config_file, save_api_config_to_file
-from crypto_fetch.config_validator import validate_config
+from crypto_fetch.commands.command import Command
+from crypto_fetch.config.config import CONFIG_FILE, DEFAULT_CONFIG, init_api_config_file, save_api_config_to_file
+from crypto_fetch.config.config_validator import validate_config
 from crypto_fetch.constants import CF_LOGGER, CMD_CONFIG_INIT, CMD_CONFIG_RECREATE, CMD_CONFIG_VALIDATE
 from crypto_fetch.exceptions import ConfigError
 

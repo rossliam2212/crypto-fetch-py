@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from crypto_fetch.command_utils import get_timestamp
+from crypto_fetch.commands.command_utils import get_timestamp
 from crypto_fetch.constants import (
     BOLD,
     CURRENCY_CODE_ONLY_MAP,

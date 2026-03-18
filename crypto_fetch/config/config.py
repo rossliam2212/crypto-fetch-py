@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 
 import yaml  # type: ignore
 
-from crypto_fetch.config_validator import validate_config
+from crypto_fetch.config.config_validator import validate_config
 from crypto_fetch.constants import (
     CF_LOGGER,
     CONFIG_DEFAULTS_API_TIMEOUT,
