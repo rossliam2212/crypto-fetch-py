@@ -7,7 +7,13 @@ from colorama import just_fix_windows_console # type: ignore
 from crypto_fetch.api.api_client import APIConfig, BaseAPIClient, CoinGeckoAPIClient, CoinMarketCapAPIClient
 from crypto_fetch.config.config import get_api_provider_config, get_default_api_provider
 from crypto_fetch.commands.config_command import ConfigCommand
-from crypto_fetch.constants import *
+from crypto_fetch.constants import (
+    CF_LOGGER, CF_VERSION,
+    CMD_PRICE, CMD_CONVERT, CMD_CONFIG, CMD_PORTFOLIO,
+    CMD_CONFIG_INIT, CMD_CONFIG_VALIDATE, CMD_CONFIG_RECREATE,
+    PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO,
+    CONFIG_KEY_PROVIDER_NAME, CONFIG_KEY_PROVIDER_BASE_URL, CONFIG_KEY_PROVIDER_PRICE_EP,
+)
 from crypto_fetch.commands.convert_command import ConvertCommand
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.commands.portfolio_command import PortfolioCommand

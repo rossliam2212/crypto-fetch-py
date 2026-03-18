@@ -166,7 +166,7 @@ def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Di
 
     summary = (
         f"Total Assets: {len(holdings)}\n"
-        f"Total Value:  {symbol}{total_value:,.2f}\n"
+        f"Total Value:  {f'{symbol}{total_value:,.2f}' if symbol in ('$', '¥') else f'{total_value:,.2f} {symbol}'}\n"
         "\n"
         f"Timestamp:    {get_timestamp()}"
     )
@@ -182,6 +182,9 @@ def _format_large_number(number: float, currency_code: str) -> str:
 
     :returns: The formatted number as a str.
     """
+    if number == 0:
+        return f"0 ({currency_code})"
+
     magnitude: int = int(math.floor(math.log10(abs(number)) / 3))
     units: List[str] = ["", "K", "M", "B", "T"]
     unit: str = units[magnitude] if magnitude < len(units) else f"e{magnitude*3}"
