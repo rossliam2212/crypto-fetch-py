@@ -97,6 +97,7 @@ def _create_api_client(args: argparse.Namespace) -> BaseAPIClient:
 def _create_api_config(provider: str) -> APIConfig:
     logger.debug(f"Creating API client for provider: '{provider}'")
     config = get_api_provider_config(provider)
+
     return APIConfig(
         name=config.get(CONFIG_KEY_PROVIDER_NAME, provider),
         base_url=config.get(CONFIG_KEY_PROVIDER_BASE_URL, ""),

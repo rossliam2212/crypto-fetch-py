@@ -8,15 +8,15 @@ from rich.table import Table
 
 from crypto_fetch.command_utils import get_timestamp
 from crypto_fetch.constants import (
-    BOLD_OUTPUT,
+    BOLD,
     CURRENCY_CODE_ONLY_MAP,
     CURRENCY_SYMBOL_MAP,
-    GREEN_OUTPUT,
+    GREEN,
     PRECISION_HIGH,
     PRECISION_LOW,
     PRECISION_MEDIUM,
-    RED_OUTPUT,
-    RESET_OUTPUT,
+    RED,
+    RESET,
 )
 
 def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
@@ -69,11 +69,11 @@ def _get_base_price_output(price: float, ticker: str, currency_symbol: str, curr
     :return: The base output as a str.
     """
     if currency_symbol == "$" or currency_symbol == "¥":
-        return f"🔹 ${ticker}: {BOLD_OUTPUT}{currency_symbol}{price:.4f}{RESET_OUTPUT} ({currency_code})"
+        return f"🔹 ${ticker}: {BOLD}{currency_symbol}{price:.4f}{RESET} ({currency_code})"
     elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        return f"🔹 ${ticker}: {BOLD_OUTPUT}{price:.4f}{currency_symbol}{RESET_OUTPUT} ({currency_code})"
+        return f"🔹 ${ticker}: {BOLD}{price:.4f}{currency_symbol}{RESET} ({currency_code})"
     else:
-        return f"🔹 ${ticker}: {BOLD_OUTPUT}{currency_symbol}{price:.4f}{RESET_OUTPUT}"
+        return f"🔹 ${ticker}: {BOLD}{currency_symbol}{price:.4f}{RESET}"
 
 
 def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> List[str]:
@@ -119,11 +119,11 @@ def format_convert_output(ticker: str, currency_code: str, amount_to_convert: fl
     currency_symbol: str = _get_currency_symbol(currency_code)
 
     if currency_symbol == "$" or currency_symbol == "¥":
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{currency_symbol}{converted_amount:.4f}{RESET_OUTPUT} ({currency_code})"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD}{currency_symbol}{converted_amount:.4f}{RESET} ({currency_code})"
     elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{converted_amount:.4f}{currency_symbol}{RESET_OUTPUT} ({currency_code})"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD}{converted_amount:.4f}{currency_symbol}{RESET} ({currency_code})"
     else:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD_OUTPUT}{currency_symbol}{converted_amount:.4f}{RESET_OUTPUT}"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD}{currency_symbol}{converted_amount:.4f}{RESET}"
 
     return output
 
@@ -207,9 +207,9 @@ def _format_percentage_change(change: float) -> str:
     :returns: The formatted percentage str.
     """
     if change > 0:
-        return f"{GREEN_OUTPUT}▲{RESET_OUTPUT} {change:.2f}%"
+        return f"{GREEN}▲{RESET} {change:.2f}%"
     elif change < 0:
-        return f"{RED_OUTPUT}▼{RESET_OUTPUT} {change:.2f}%"
+        return f"{RED}▼{RESET} {change:.2f}%"
     else:
         return f"{change:.2f}%"
 
