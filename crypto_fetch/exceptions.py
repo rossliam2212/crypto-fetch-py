@@ -1,40 +1,18 @@
-class APIError(Exception):
+class CryptoFetchError(Exception):
+    """Base exception for all crypto-fetch errors."""
+    pass
+
+
+class APIError(CryptoFetchError):
     """Exception for API related errors."""
-
-    def __init__(self, message: str):
-        """
-        Constructs an APIError exception.
-
-        :param message: The exception message.
-        """
-        self.message = message
-        super().__init__(message)
-
-    def __str__(self):
-        return self.message
+    pass
 
 
-class CommandError(Exception):
+class CommandError(CryptoFetchError):
     """Exception for Command related errors."""
-
-    def __init__(self, message: str):
-        """
-        Constructs an CommandError exception.
-
-        :param message: The exception message.
-        """
-        self.message = message
-        super().__init__(message)
+    pass
 
 
-class ConfigError(Exception):
+class ConfigError(CryptoFetchError):
     """Exception for Config related errors."""
-
-    def __init__(self, message: str):
-        """
-        Constructs an ConfigError exception.
-
-        :param message: The exception message.
-        """
-        self.message = message
-        super().__init__(message)
+    pass

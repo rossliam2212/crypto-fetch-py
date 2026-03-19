@@ -124,7 +124,7 @@ def get_api_key(provider: str) -> Optional[str]:
     :return: the api key or None.
     """
     config = load_api_config_from_file()
-    api_key = config.get(CONFIG_HEADER_API_KEYS, {}).get(provider, PROVIDER_COINMARKETCAP)
+    api_key = config.get(CONFIG_HEADER_API_KEYS, {}).get(provider, "")
 
     if api_key and isinstance(api_key, str):
         logger.debug(f"Found API key for '{provider}' in config file")

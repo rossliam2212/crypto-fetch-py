@@ -15,6 +15,7 @@ from crypto_fetch.constants import (
     CONFIG_KEY_PROVIDER_NAME, CONFIG_KEY_PROVIDER_BASE_URL, CONFIG_KEY_PROVIDER_PRICE_EP,
 )
 from crypto_fetch.commands.convert_command import ConvertCommand
+from crypto_fetch.exceptions import CryptoFetchError
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.commands.portfolio_command import PortfolioCommand
 from crypto_fetch.commands.price_command import PriceCommand
@@ -57,7 +58,7 @@ def main():
         elif args.command == CMD_PORTFOLIO:
             command = PortfolioCommand(client, args.file, args.currency, args.provider)
             command.run()
-    except Exception as ex:
+    except CryptoFetchError as ex:
         logger.error(f"'{args.command}' command failed. Error: {ex}")
 
 
