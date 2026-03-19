@@ -2,4 +2,6 @@
 .idea/
 crypto_fetch/__pycache__/
 crypto_fetch/api/__pycache__/
+crypto_fetch/config/__pycache__/
+crypto_fetch/commands/__pycache__/
 crypto_fetch.egg-info

@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-from pathlib import Path
 from typing import List
 
 from crypto_fetch.constants import (
@@ -10,7 +9,7 @@ from crypto_fetch.constants import (
     PROVIDERS_SUPPORTED,
     SUPPORTED_CRYPTO_TICKERS,
 )
-from crypto_fetch.exceptions import CommandError, ConfigError
+from crypto_fetch.exceptions import CommandError
 
 logger = logging.getLogger(CF_LOGGER)
 
@@ -65,16 +64,3 @@ def get_timestamp() -> str:
     :return: the current timestamp.
     """
     return datetime.now().strftime(DATE_TIME_FORMAT)
-
-
-def file_exists(filepath: Path) -> bool:
-    """
-    Checks whether a file exists at the given path.
-
-    :param filepath: The path to check.
-    :return: True if the file exists.
-    :raises FileNotFoundError: If the file does not exist.
-    """
-    if not filepath.exists():
-        raise ConfigError("Config file not found. Run 'crypto-fetch config init' to create")
-    return True

@@ -16,21 +16,20 @@ class ConvertCommand(Command):
 
     def __init__(self, client: BaseAPIClient, amount: str, ticker: str, currency: str, show_date: bool, provider: str):
         super().__init__(client)
-        self.amount_to_convert_str = amount
+        self.amount_raw = amount
         self.amount_to_convert: float = 0.0
         self.ticker = ticker
         self.currency = currency
         self.provider = provider
         self.show_date = show_date
 
-
     def _validate(self) -> None:
         logger.debug(f"Validating parsed arguments for convert command")
 
         try:
-            self.amount_to_convert = float(self.amount_to_convert_str)
+            self.amount_to_convert = float(self.amount_raw)
         except ValueError:
-            raise CommandError(f"Invalid amount: '{self.amount_to_convert_str}' is not a number")
+            raise CommandError(f"Invalid amount: '{self.amount_raw}' is not a number")
 
         if self.amount_to_convert <= 0:
             raise CommandError(f"Amount must be positive. Received: '{self.amount_to_convert}'")

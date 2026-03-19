@@ -17,8 +17,8 @@ class PriceCommand(Command):
 
     def __init__(self, client: BaseAPIClient, tickers: str, currency: str, provider: str, verbose: bool, show_date: bool = False):
         super().__init__(client)
-        self.tickers_raw = tickers # ex: xrp
-        self.ticker_list: List[str] = [] # ex: ['XRP']
+        self.tickers = tickers
+        self.ticker_list: List[str] = []
         self.currency = currency
         self.provider = provider
         self.verbose = verbose
@@ -37,9 +37,9 @@ class PriceCommand(Command):
             logger.debug(f"API provider not specified. Using default: '{self.provider}'")
         self.provider = validate_provider(self.provider)
 
-        self.ticker_list = [t.strip().upper() for t in self.tickers_raw.split(",") if t.strip()]
+        self.ticker_list = [t.strip().upper() for t in self.tickers.split(",") if t.strip()]
         if not self.ticker_list:
-            raise CommandError(f"No valid tickers provided. Got: {self.tickers_raw}")
+            raise CommandError(f"No valid tickers provided. Got: {self.tickers}")
         validate_tickers(self.ticker_list)
 
         logger.debug(f"Validated arguments successfully")
