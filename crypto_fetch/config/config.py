@@ -44,9 +44,6 @@ DEFAULT_CONFIG = {
 
 logger = logging.getLogger(CF_LOGGER)
 
-# Cache for loaded config
-_cached_config: Optional[Dict[str, Any]] = None
-
 
 def init_api_config_file() -> None:
     """
@@ -75,44 +72,30 @@ def save_api_config_to_file(config: Dict[str, Any]) -> None:
 
 def load_api_config_from_file() -> Dict[str, Any]:
     """
-    Loads the YAML config file with caching.
-    Converts the YAML input from the config file into a dict[str, Any].
-    
-    :return: the loaded config file or the default.
+    Loads and returns the YAML config file, or defaults if missing/invalid.
+
+    :return: the loaded config dict.
     """
-    global _cached_config
-    
-    # Return cached config if available
-    if _cached_config is not None:
-        return _cached_config
-    
     if CONFIG_FILE.exists():
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
                 if config is None or not isinstance(config, dict):
                     logger.warning("Config file is empty or invalid. Using defaults.")
-                    _cached_config = DEFAULT_CONFIG.copy()
-                    return _cached_config
-                
-                # Validate config (will only run once)
+                    return DEFAULT_CONFIG.copy()
+
                 errors = validate_config(config)
                 if errors:
                     logger.warning(f"Config has {len(errors)} issue(s). Run 'crypto-fetch config validate' for details")
-                
-                _cached_config = config
+
                 return config
         except yaml.YAMLError as ex:
             logger.error(f"API config file is corrupted: {ex}. Using defaults.")
-            _cached_config = DEFAULT_CONFIG.copy()
-            return _cached_config
+            return DEFAULT_CONFIG.copy()
         except Exception as ex:
             logger.error(f"Failed to load API config: {ex}. Using defaults.")
-            _cached_config = DEFAULT_CONFIG.copy()
-            return _cached_config
-    
-    _cached_config = DEFAULT_CONFIG.copy()
-    return _cached_config
+            return DEFAULT_CONFIG.copy()
+    return DEFAULT_CONFIG.copy()
 
 
 def get_api_key(provider: str) -> Optional[str]:

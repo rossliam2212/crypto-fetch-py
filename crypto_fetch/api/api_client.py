@@ -248,8 +248,10 @@ class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
             data = self._make_request(headers, params)
             return data[coin_id][currency_code.lower()]
+        except APIError:
+            raise
         except Exception as ex:
-            raise Exception(f"{str(ex)}")
+            raise APIError(f"Failed to fetch price for '{ticker}': {ex}") from ex
 
     def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
         try:
@@ -263,8 +265,10 @@ class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
             data = self._make_request(headers, params)
             return self._parse_json_response(data, currency_code, ticker_list)
+        except APIError:
+            raise
         except Exception as ex:
-            raise Exception(f"{str(ex)}")
+            raise APIError(f"Failed to fetch prices for '{tickers}': {ex}") from ex
 
     def _get_request_headers(self, api_key: str) -> Dict[str, str]:
         return {
