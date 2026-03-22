@@ -1,10 +1,12 @@
 import argparse
-from typing import Optional
 import logging
+from typing import Optional
 
 from colorama import just_fix_windows_console # type: ignore
 
-from crypto_fetch.api.api_client import APIConfig, BaseAPIClient, CoinGeckoAPIClient, CoinMarketCapAPIClient
+from crypto_fetch.api.api_client import APIConfig, BaseAPIClient
+from crypto_fetch.api.cmc_api_client import CoinMarketCapAPIClient
+from crypto_fetch.api.cg_api_client import CoinGeckoAPIClient
 from crypto_fetch.config.config import get_api_provider_config, get_default_api_provider
 from crypto_fetch.commands.config_command import ConfigCommand
 from crypto_fetch.constants import (

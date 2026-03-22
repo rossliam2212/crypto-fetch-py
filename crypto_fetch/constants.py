@@ -1,5 +1,6 @@
-from colorama import Fore, Style # type: ignore
 from typing import Final, List
+
+from colorama import Fore, Style  # type: ignore
 
 # =========================================================================================================
 # Application Configuration
