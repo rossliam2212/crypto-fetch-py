@@ -8,18 +8,19 @@ from rich.table import Table
 
 from crypto_fetch.commands.command_utils import get_timestamp
 from crypto_fetch.constants import (
-    BOLD,
     CURRENCY_CODE_ONLY_MAP,
     CURRENCY_SYMBOL_MAP,
-    GREEN,
     PRECISION_HIGH,
     PRECISION_LOW,
     PRECISION_MEDIUM,
-    RED,
-    RESET,
 )
 
-_console = Console()
+_console = Console(highlight=False)
+
+
+def print_output(text: str) -> None:
+    """Prints formatted output via rich console."""
+    _console.print(text)
 
 def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
     """
@@ -53,7 +54,7 @@ def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, a
         output.append(f"{base_line}\n  " + "\n  ".join(verbose_details))
 
     if verbose:
-        output.append(f"\n[data fetched from '{api_url}']")
+        output.append(f"\n\\[data fetched from '{api_url}']")
 
     return "\n".join(output)
 
@@ -71,11 +72,11 @@ def _get_base_price_output(price: float, ticker: str, currency_symbol: str, curr
     :return: The base output as a str.
     """
     if currency_symbol == "$" or currency_symbol == "¥":
-        return f"🔹 ${ticker}: {BOLD}{currency_symbol}{price:.4f}{RESET} ({currency_code})"
+        return f"🔹 ${ticker}: [bold]{currency_symbol}{price:.4f}[/bold] ({currency_code})"
     elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        return f"🔹 ${ticker}: {BOLD}{price:.4f}{currency_symbol}{RESET} ({currency_code})"
+        return f"🔹 ${ticker}: [bold]{price:.4f}{currency_symbol}[/bold] ({currency_code})"
     else:
-        return f"🔹 ${ticker}: {BOLD}{currency_symbol}{price:.4f}{RESET}"
+        return f"🔹 ${ticker}: [bold]{currency_symbol}{price:.4f}[/bold]"
 
 
 def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> List[str]:
@@ -121,11 +122,11 @@ def format_convert_output(ticker: str, currency_code: str, amount_to_convert: fl
     currency_symbol: str = _get_currency_symbol(currency_code)
 
     if currency_symbol == "$" or currency_symbol == "¥":
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD}{currency_symbol}{converted_amount:.4f}{RESET} ({currency_code})"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => [bold]{currency_symbol}{converted_amount:.4f}[/bold] ({currency_code})"
     elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD}{converted_amount:.4f}{currency_symbol}{RESET} ({currency_code})"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => [bold]{converted_amount:.4f}{currency_symbol}[/bold] ({currency_code})"
     else:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => {BOLD}{currency_symbol}{converted_amount:.4f}{RESET}"
+        output: str = f"🔸 {amount_to_convert} ${ticker} => [bold]{currency_symbol}{converted_amount:.4f}[/bold]"
 
     return output
 
@@ -212,9 +213,9 @@ def _format_percentage_change(change: float) -> str:
     :returns: The formatted percentage str.
     """
     if change > 0:
-        return f"{GREEN}▲{RESET} {change:.2f}%"
+        return f"[green]▲[/green] {change:.2f}%"
     elif change < 0:
-        return f"{RED}▼{RESET} {change:.2f}%"
+        return f"[red]▼[/red] {change:.2f}%"
     else:
         return f"{change:.2f}%"
 

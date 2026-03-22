@@ -2,8 +2,6 @@ import argparse
 import logging
 from typing import Optional
 
-from colorama import just_fix_windows_console # type: ignore
-
 from crypto_fetch.api.api_client import APIConfig, BaseAPIClient
 from crypto_fetch.api.cmc_api_client import CoinMarketCapAPIClient
 from crypto_fetch.api.cg_api_client import CoinGeckoAPIClient
@@ -29,8 +27,6 @@ def main():
     """
     crypto-fetch entry point
     """
-    just_fix_windows_console()
-
     parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--version", action='version', version=f"%(prog)s {CF_VERSION}")

@@ -1,7 +1,5 @@
 from typing import Final, List
 
-from colorama import Fore, Style  # type: ignore
-
 # =========================================================================================================
 # Application Configuration
 # =========================================================================================================
@@ -114,12 +112,12 @@ PRECISION_HIGH: Final[int] = 2
 PRECISION_MEDIUM: Final[int] = 1
 PRECISION_LOW: Final[int] = 0
 
-RED = Fore.RED
-GREEN = Fore.GREEN
-CYAN = Fore.CYAN
-YELLOW = Fore.YELLOW
+RED = "\033[31m"
+GREEN = "\033[32m"
+CYAN = "\033[36m"
+YELLOW = "\033[33m"
 ORANGE = "\033[38;5;208m"
-BOLD = Style.BRIGHT
-RESET = Style.RESET_ALL
+BOLD = "\033[1m"
+RESET = "\033[0m"
 
 DATE_TIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M:%S"

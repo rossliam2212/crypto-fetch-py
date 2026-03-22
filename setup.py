@@ -8,7 +8,6 @@ setup(
    packages=find_packages(), 
    install_requires=[
        'requests>=2.32.5', 
-       'colorama>=0.4.6',
        'pyyaml>=6.0.3',
        'rich>=13.0.0'
     ],

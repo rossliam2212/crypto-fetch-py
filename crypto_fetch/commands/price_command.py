@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from crypto_fetch.api.api_client import BaseAPIClient
-from crypto_fetch.api.formatter import format_price_output
+from crypto_fetch.api.formatter import format_price_output, print_output
 from crypto_fetch.commands.command import Command
 from crypto_fetch.commands.command_utils import get_timestamp, validate_currency, validate_provider, validate_tickers
 from crypto_fetch.config.config import get_default_api_provider, get_default_fiat_currency
@@ -52,4 +52,4 @@ class PriceCommand(Command):
         if self.show_date:
             logger.info(f"Timestamp: {get_timestamp()}")
         data = self.client.fetch_multiple_price_data(",".join(self.ticker_list), self.currency)
-        logger.info(format_price_output(data, self.currency, self.client.config.base_url, self.verbose))
+        print_output(format_price_output(data, self.currency, self.client.config.base_url, self.verbose))

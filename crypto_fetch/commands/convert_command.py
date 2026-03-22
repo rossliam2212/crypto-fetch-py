@@ -1,7 +1,7 @@
 import logging
 
 from crypto_fetch.api.api_client import BaseAPIClient
-from crypto_fetch.api.formatter import format_convert_output
+from crypto_fetch.api.formatter import format_convert_output, print_output
 from crypto_fetch.commands.command import Command
 from crypto_fetch.commands.command_utils import get_timestamp, validate_currency, validate_provider, validate_tickers
 from crypto_fetch.config.config import get_default_api_provider, get_default_fiat_currency
@@ -60,7 +60,7 @@ class ConvertCommand(Command):
         price: float = self.client.fetch_single_price_data(self.ticker, self.currency)
 
         converted_amount: float = self._calculate_conversion(price)
-        logger.info(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount))
+        print_output(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount))
 
 
     def _calculate_conversion(self, fetched_crypto_price: float) -> float:
