@@ -2,8 +2,6 @@ import logging
 import re
 from typing import Any, Dict
 
-import requests  # type: ignore
-
 from crypto_fetch.api.api_client import BaseAPIClient
 from crypto_fetch.constants import CF_LOGGER
 from crypto_fetch.exceptions import APIError
@@ -27,7 +25,7 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         except APIError:
             raise
         except Exception as ex:
-            raise APIError(f"Failed to fetch price for '{ticker}: {ex}'") from ex
+            raise APIError(f"Failed to fetch price for '{ticker}': {ex}") from ex
 
     def fetch_multiple_price_data(self, tickers: str, currency_code: str) -> Dict[str, Dict[str, float]]:
         try:
@@ -42,11 +40,11 @@ class CoinMarketCapAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
         except APIError:
             raise
         except Exception as ex:
-            raise APIError(f"Failed to fetch price for '{tickers}: {ex}'") from ex
+            raise APIError(f"Failed to fetch price for '{tickers}': {ex}") from ex
 
     def _get_request_headers(self, api_key: str) -> Dict[str, str]:
         return {
-            "Accepts": "application/json",
+            "Accept": "application/json",
             "X-CMC_PRO_API_KEY": api_key
         }
 

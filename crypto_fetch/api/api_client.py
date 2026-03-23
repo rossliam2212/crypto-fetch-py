@@ -106,7 +106,6 @@ class BaseAPIClient(ABC, Generic[T]):
             logger.debug(f"Making request to: '{request_url}'")
 
             response_timeout = get_default_api_timeout()
-
             response: requests.Response = requests.get(
                 url=request_url,
                 headers=headers,
@@ -114,9 +113,9 @@ class BaseAPIClient(ABC, Generic[T]):
                 timeout=response_timeout
             )
 
-            if response.status_code != 200:
-                error_msg = response.json().get("status", {}).get("error_message", "Unknown API error")
-                raise APIError(error_msg)
+            if not response.ok:
+                error_msg = response.json().get("status", {}).get("error_message")
+                raise APIError(error_msg or f"API request failed with status {response.status_code}")
             
             logger.debug(f"Request was successful. Status code: {response.status_code}")
             return response.json()
