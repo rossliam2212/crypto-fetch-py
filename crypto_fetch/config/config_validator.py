@@ -25,31 +25,34 @@ def validate_config(config: Dict[str, Any]) -> List[str]:
     # Check required top-level keys
     if CONFIG_HEADER_DEFAULTS not in config:
         errors.append("Missing 'defaults' section")
+    else:
+        _validate_defaults_section(config[CONFIG_HEADER_DEFAULTS], errors)
     
     if CONFIG_HEADER_API_KEYS not in config:
         errors.append("Missing 'api_keys' section")
-    
-    # Validate defaults section
-    if CONFIG_HEADER_DEFAULTS in config:
-        defaults = config[CONFIG_HEADER_DEFAULTS]
-        _validate_defaults_section(defaults, errors)
-    
-    # Validate provider configs
+
     _validate_providers_section(config, errors)
-    
+
     return errors
 
-def _validate_defaults_section(defaults, errors: List[str]) -> None:
-    if defaults is None:
+
+def _validate_defaults_section(defaults_section: Dict[str, Any], errors: List[str]) -> None:
+    """
+    Validates the defaults section in the config file.
+
+    :param defaults_section: The defaults dict to validate.
+    :param errors: List of validation error messages.
+    """
+    if defaults_section is None:
         errors.append("'defaults' section is empty (null)")
         return
     
-    if not isinstance(defaults, dict):
-        errors.append(f"'defaults' section must be a dictionary, got {type(defaults).__name__}")
+    if not isinstance(defaults_section, dict):
+        errors.append(f"'defaults' section must be a dictionary, got {type(defaults_section).__name__}")
         return
-    
+
     # Validate timeout
-    timeout = defaults.get("api_timeout")
+    timeout = defaults_section.get("api_timeout")
     if timeout is not None:
         if not isinstance(timeout, int):
             errors.append(f"Invalid timeout type: expected int. Got: {type(timeout).__name__}")
@@ -57,19 +60,26 @@ def _validate_defaults_section(defaults, errors: List[str]) -> None:
             errors.append(f"Invalid timeout value: {timeout} (must be 1-300)")
     
     # Validate currency
-    currency = defaults.get("currency")
+    currency = defaults_section.get("currency")
     if currency and not isinstance(currency, str):
         errors.append(f"Invalid currency type: expected str. Got: {type(currency).__name__}")
     
     # Validate provider
-    provider = defaults.get("api_provider")
+    provider = defaults_section.get("api_provider")
     if provider and provider not in PROVIDERS_SUPPORTED:
-        errors.append(f"Invalid provider: {provider} (must be 'coinmarketcap' or 'coingecko')")
+        errors.append(f"Invalid provider: {provider} (must be one of: {', '.join(PROVIDERS_SUPPORTED)})")
 
-def _validate_providers_section(config: Dict[str, Any], errors: List[str]) -> None:
+
+def _validate_providers_section(provider_section: Dict[str, Any], errors: List[str]) -> None:
+    """
+    Validates the provider section in the config file.
+
+    :param provider_section: The configuration dict to validate.
+    :param errors: List of validation error messages.
+    """
     for provider in PROVIDERS_SUPPORTED:
-        if provider in config:
-            provider_config = config[provider]
+        if provider in provider_section:
+            provider_config = provider_section[provider]
             
             if provider_config is None:
                 errors.append(f"'{provider}' section is empty (null)")
