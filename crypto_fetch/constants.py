@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Final, List
 
 # =========================================================================================================
@@ -8,8 +9,13 @@ CF_VERSION: Final[str] = "1.0.0"
 CF_LOGGER: Final[str] = "crypto_fetch"
 
 PROVIDER_COINMARKETCAP: Final[str] = "coinmarketcap"
+PROVIDER_COINMARKETCAP_BASE_URL: Final[str] = "https://pro-api.coinmarketcap.com/v1"
+PROVIDER_COINMARKETCAP_PRICE_EP: Final[str] = "/cryptocurrency/quotes/latest"
+
 PROVIDER_COINGECKO: Final[str] = "coingecko"
-PROVIDERS_SUPPORTED = [PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO] 
+PROVIDER_COINGECKO_BASE_URL: Final[str] = "https://api.coingecko.com/api/v3/"
+PROVIDER_COINGECKO_PRICE_EP: Final[str] = "/simple/price"
+PROVIDERS_SUPPORTED = [PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO]
 
 # =========================================================================================================
 # Config Key Configuration
@@ -31,6 +37,30 @@ CONFIG_KEY_DEFAULTS_API_PROVIDER: Final[str] = "api_provider"
 
 CONFIG_DEFAULTS_CURRENCY: Final[str] = "EUR"
 CONFIG_DEFAULTS_API_TIMEOUT: Final[int] = 10
+
+CONFIG_DIRECTORY_PATH = Path.home() / ".crypto-fetch-py"
+CONFIG_FILE_PATH = CONFIG_DIRECTORY_PATH / "config.yaml"
+DEFAULT_API_CONFIG = {
+    CONFIG_HEADER_API_KEYS: {
+        PROVIDER_COINMARKETCAP: "",
+        PROVIDER_COINGECKO: ""
+    },
+    CONFIG_HEADER_DEFAULTS: {
+        CONFIG_KEY_DEFAULTS_CURRENCY: CONFIG_DEFAULTS_CURRENCY,
+        CONFIG_KEY_DEFAULTS_API_PROVIDER: PROVIDER_COINMARKETCAP,
+        CONFIG_KEY_DEFAULTS_API_TIMEOUT: CONFIG_DEFAULTS_API_TIMEOUT
+    },
+    PROVIDER_COINMARKETCAP: {
+        CONFIG_KEY_PROVIDER_NAME: PROVIDER_COINMARKETCAP,
+        CONFIG_KEY_PROVIDER_BASE_URL: PROVIDER_COINMARKETCAP_BASE_URL,
+        CONFIG_KEY_PROVIDER_PRICE_EP: PROVIDER_COINMARKETCAP_PRICE_EP
+    },
+    PROVIDER_COINGECKO: {
+        CONFIG_KEY_PROVIDER_NAME: PROVIDER_COINGECKO,
+        CONFIG_KEY_PROVIDER_BASE_URL: PROVIDER_COINGECKO_BASE_URL,
+        CONFIG_KEY_PROVIDER_PRICE_EP: PROVIDER_COINGECKO_PRICE_EP
+    }
+}
 
 # =========================================================================================================
 # Command Configuration
@@ -111,13 +141,5 @@ CG_COIN_ID_MAP = {
 PRECISION_HIGH: Final[int] = 2
 PRECISION_MEDIUM: Final[int] = 1
 PRECISION_LOW: Final[int] = 0
-
-RED = "\033[31m"
-GREEN = "\033[32m"
-CYAN = "\033[36m"
-YELLOW = "\033[33m"
-ORANGE = "\033[38;5;208m"
-BOLD = "\033[1m"
-RESET = "\033[0m"
 
 DATE_TIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M:%S"

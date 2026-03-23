@@ -3,7 +3,7 @@ import logging
 import yaml  # type: ignore
 
 from crypto_fetch.commands.command import Command
-from crypto_fetch.config.config import CONFIG_FILE, DEFAULT_CONFIG, init_api_config_file, save_api_config_to_file
+from crypto_fetch.config.config import CONFIG_FILE_PATH, DEFAULT_API_CONFIG, init_api_config_file, save_api_config_to_file
 from crypto_fetch.config.config_validator import validate_config
 from crypto_fetch.constants import CF_LOGGER, CMD_CONFIG_INIT, CMD_CONFIG_RECREATE, CMD_CONFIG_VALIDATE
 from crypto_fetch.exceptions import ConfigError
@@ -37,10 +37,10 @@ class ConfigCommand(Command):
         """
         Validates config file.
         """
-        if not CONFIG_FILE.exists():
+        if not CONFIG_FILE_PATH.exists():
             raise ConfigError("Config file not found. Run 'crypto-fetch config init' to create")
         try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
             if config is None or not isinstance(config, dict):
                 logger.error("Config file is empty or invalid")
@@ -64,6 +64,6 @@ class ConfigCommand(Command):
         """
         Recreates config file.
         """
-        save_api_config_to_file(DEFAULT_CONFIG)
-        logger.info(f"Config file recreated at: '{CONFIG_FILE}' ✅")
+        save_api_config_to_file(DEFAULT_API_CONFIG)
+        logger.info(f"Config file recreated at: '{CONFIG_FILE_PATH}' ✅")
         logger.info("*** Remember to add your API keys ***")
