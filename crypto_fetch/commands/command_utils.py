@@ -1,6 +1,6 @@
 from datetime import datetime
 import logging
-from typing import List
+from typing import List, Optional
 
 from crypto_fetch.constants import (
     CF_LOGGER,
@@ -9,9 +9,35 @@ from crypto_fetch.constants import (
     PROVIDERS_SUPPORTED,
     SUPPORTED_CRYPTO_TICKERS,
 )
+from crypto_fetch.config.config import get_default_fiat_currency, get_default_api_provider
 from crypto_fetch.exceptions import CommandError
 
 logger = logging.getLogger(CF_LOGGER)
+
+def resolve_currency(value: Optional[str]) -> str:
+    """
+    Defaults to config currency if None, then validates.
+
+    :param value: The currency to resolve.
+    :return: The resolved currency.
+    """
+    if value is None:
+        value = get_default_fiat_currency()
+        logger.debug(f"Fiat currency not specified. Using default: '{value}'")
+    return validate_currency(value)
+
+
+def resolve_provider(value: Optional[str]) -> str:
+    """
+    Defaults to config provider if None, then validates.
+
+    :param value: The provider to resolve.
+    :return: The resolved provider.
+    """
+    if value is None:
+        value = get_default_api_provider()
+        logger.debug(f"API provider not specified. Using default: '{value}'")
+    return validate_provider(value)
 
 
 def validate_currency(value: str) -> str:
