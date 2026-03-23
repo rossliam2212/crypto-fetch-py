@@ -1,51 +1,47 @@
 import logging
-import sys
 
-from crypto_fetch.constants import CF_LOGGER, CYAN, RED, ORANGE, RESET
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.text import Text
 
-LEVEL_COLORS = {
-    logging.DEBUG:   CYAN,
-    logging.WARNING: ORANGE,
-    logging.ERROR:   RED,
+from crypto_fetch.constants import CF_LOGGER
+
+LEVEL_STYLES = {
+    logging.DEBUG:   "cyan",
+    logging.WARNING: "color(208)",
+    logging.ERROR:   "red",
 }
 
+_stdout_console = Console(stderr=False)
+_stderr_console = Console(stderr=True)
 
-class LogLevelFormatter(logging.Formatter):
-    """Custom formatter that applies level-based colors and format."""
 
-    def __init__(self, fmt_info: str, fmt_debug: str):
-        """
-        :param fmt_info: Format string for INFO level messages.
-        :param fmt_debug: Format string for DEBUG, WARNING and ERROR level messages.
-        """
-        super().__init__()
-        self.fmt_info = logging.Formatter(fmt_info)
-        self.fmt_debug = logging.Formatter(fmt_debug)
+class RichLevelFormatter(logging.Formatter):
+    """Formats log records in the format: [timestamp] [LEVEL] [file:line] message"""
+
+    _plain = logging.Formatter("[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s")
 
     def format(self, record: logging.LogRecord) -> str:
-        """
-        Formats a log record, applying a level-based color to the level name.
-
-        :param record: The log record to format.
-        :return: The formatted log message string.
-        """
         if record.levelno == logging.INFO:
-            return self.fmt_info.format(record)
-        return self._format_with_color(record)
+            return record.getMessage()
 
-    def _format_with_color(self, record: logging.LogRecord) -> str:
-        """
-        Formats a log record with a colorized level name.
+        plain = self._plain.format(record)
+        style = LEVEL_STYLES.get(record.levelno, "")
+        text = Text(plain)
+        level_tag = f"[{record.levelname}]"
+        start = plain.index(level_tag)
+        text.stylize(style, start, start + len(level_tag))
+        return text.markup
 
-        :param record: The log record to format.
-        :return: The formatted log message string with a colored level name.
-        """
-        color = LEVEL_COLORS.get(record.levelno, "")
-        original_levelname = record.levelname
-        record.levelname = f"{color}[{record.levelname}]{RESET}"
-        msg = self.fmt_debug.format(record)
-        record.levelname = original_levelname
-        return msg
+
+class _RichHandler(RichHandler):
+    def emit(self, record: logging.LogRecord) -> None:
+        console = _stderr_console if record.levelno >= logging.ERROR else _stdout_console
+        try:
+            msg = self.format(record)
+            console.print(msg, markup=True, highlight=False)
+        except Exception:
+            self.handleError(record)
 
 
 def setup_logger(debug: bool = False) -> None:
@@ -60,20 +56,7 @@ def setup_logger(debug: bool = False) -> None:
     if logger.handlers:
         return
 
-    fmt = LogLevelFormatter(
-        fmt_info="%(message)s",
-        fmt_debug="[%(asctime)s] %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
-    )
-
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.setLevel(logging.DEBUG if debug else logging.INFO)
-    stdout_handler.addFilter(lambda r: r.levelno < logging.ERROR)
-    stdout_handler.setFormatter(fmt)
-
-    stderr_handler = logging.StreamHandler(sys.stderr)
-    stderr_handler.setLevel(logging.ERROR)
-    stderr_handler.setFormatter(fmt)
-
-    logger.addHandler(stdout_handler)
-    logger.addHandler(stderr_handler)
+    handler = _RichHandler(show_time=False, show_level=False, show_path=False)
+    handler.setFormatter(RichLevelFormatter())
+    logger.addHandler(handler)
     logger.debug(f"{CF_LOGGER} logger initialized")
