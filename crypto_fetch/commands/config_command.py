@@ -1,5 +1,4 @@
 import logging
-import sys
 
 import yaml  # type: ignore
 
@@ -19,8 +18,10 @@ class ConfigCommand(Command):
         super().__init__(client=None)
         self.action = action
 
+
     def _validate(self) -> None:
         pass
+
 
     def _execute(self) -> None:
         logger.debug(f"Executing config action: '{self.action}'")
@@ -33,6 +34,9 @@ class ConfigCommand(Command):
 
 
     def _handle_validate_action(self):
+        """
+        Validates config file.
+        """
         if not CONFIG_FILE.exists():
             raise ConfigError("Config file not found. Run 'crypto-fetch config init' to create")
         try:
@@ -53,11 +57,13 @@ class ConfigCommand(Command):
             logger.error("API config validation failed ❌")
             for error in errors:
                 logger.error(f"  - {error}")
-            logger.info("Run 'crypto-fetch config recreate' to restore defaults")
-            sys.exit(1)
+            raise ConfigError("Run 'crypto-fetch config recreate' to restore defaults")
 
 
     def _handle_recreate_action(self):
+        """
+        Recreates config file.
+        """
         save_api_config_to_file(DEFAULT_CONFIG)
         logger.info(f"Config file recreated at: '{CONFIG_FILE}' ✅")
         logger.info("*** Remember to add your API keys ***")

@@ -22,8 +22,9 @@ class ConvertCommand(Command):
         self.provider = provider
         self.show_date = show_date
 
+
     def _validate(self) -> None:
-        logger.debug(f"Validating parsed arguments for convert command")
+        logger.debug("Validating parsed arguments for convert command")
 
         try:
             self.amount_to_convert = float(self.amount_raw)
@@ -39,7 +40,7 @@ class ConvertCommand(Command):
         self.ticker = self.ticker.strip().upper()
         validate_tickers([self.ticker])
 
-        logger.debug(f"Validated arguments successfully")
+        logger.debug("Validated arguments successfully")
 
 
     def _execute(self) -> None:

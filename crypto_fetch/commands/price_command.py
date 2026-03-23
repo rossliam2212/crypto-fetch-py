@@ -23,8 +23,9 @@ class PriceCommand(Command):
         self.verbose = verbose
         self.show_date = show_date
 
+
     def _validate(self) -> None:
-        logger.debug(f"Validating parsed arguments for price command")
+        logger.debug("Validating parsed arguments for price command")
 
         self.currency = resolve_currency(self.currency)
         self.provider = resolve_provider(self.provider)
@@ -34,7 +35,7 @@ class PriceCommand(Command):
             raise CommandError(f"No valid tickers provided. Got: {self.tickers}")
         validate_tickers(self.ticker_list)
 
-        logger.debug(f"Validated arguments successfully")
+        logger.debug("Validated arguments successfully")
         
     
     def _execute(self) -> None:

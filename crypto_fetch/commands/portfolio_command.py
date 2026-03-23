@@ -38,6 +38,18 @@ class PortfolioCommand(Command):
 
         logger.debug("Arguments validated successfully")
 
+
+    def _execute(self) -> None:
+        logger.debug(f"Fetching prices for {len(self.holdings)} holding(s) using provider '{self.provider}'")
+        tickers = ",".join(self.holdings.keys())
+        price_data = self.client.fetch_multiple_price_data(tickers, self.currency)
+
+        missing = [t for t in self.holdings if t not in price_data]
+        if missing:
+            logger.warning(f"No price data returned for: {', '.join(missing)}")
+
+        format_portfolio_output(self.holdings, price_data, self.currency)
+
     def _load_holdings_file(self) -> dict[str, float]:
         """
         Parses the supplied portfolio file (YAML/txt) into a map of [ticker -> amount].
@@ -52,21 +64,9 @@ class PortfolioCommand(Command):
             content = f.read()
 
         data = yaml.safe_load(content)
-
         if not isinstance(data, dict):
-            # If a txt file is supplied
             logger.debug("File is not YAML dict format, attempting plain-text parsing")
-            data = {}
-            for line in content.splitlines():
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    logger.debug(f"Skipping line: '{line}'")
-                    continue
-                # Format: 'TICKER amount'
-                parts = line.split()
-                if len(parts) != 2:
-                    raise CommandError(f"Invalid line in portfolio file: '{line}'")
-                data[parts[0]] = parts[1]
+            data = self._parse_txt_holdings(content)
 
         if not data:
             raise CommandError("Portfolio file is empty")
@@ -79,13 +79,22 @@ class PortfolioCommand(Command):
                 raise CommandError(f"Invalid amount for '{k}': '{v}' is not a number")
         return holdings
 
-    def _execute(self) -> None:
-        logger.debug(f"Fetching prices for {len(self.holdings)} holding(s) using provider '{self.provider}'")
-        tickers = ",".join(self.holdings.keys())
-        price_data = self.client.fetch_multiple_price_data(tickers, self.currency)
 
-        missing = [t for t in self.holdings if t not in price_data]
-        if missing:
-            logger.warning(f"No price data returned for: {', '.join(missing)}")
+    def _parse_txt_holdings(self, content: str) -> dict:
+        """
+        Parses plain-text portfolio format: 'TICKER amount' per line.
 
-        format_portfolio_output(self.holdings, price_data, self.currency)
+        :param content: Content line from portfolio file.
+        :return: a map of ticker to amount.
+        """
+        data = {}
+        for line in content.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                logger.debug(f"Skipping line: '{line}'")
+                continue
+            parts = line.split()
+            if len(parts) != 2:
+                raise CommandError(f"Invalid line in portfolio file: '{line}'")
+            data[parts[0]] = parts[1]
+        return data
