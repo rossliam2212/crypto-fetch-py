@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import Final, List
+from typing import Dict, Final, List, Set
 
 # =========================================================================================================
 # Application Configuration
@@ -15,7 +14,7 @@ PROVIDER_COINMARKETCAP_PRICE_EP: Final[str] = "/cryptocurrency/quotes/latest"
 PROVIDER_COINGECKO: Final[str] = "coingecko"
 PROVIDER_COINGECKO_BASE_URL: Final[str] = "https://api.coingecko.com/api/v3/"
 PROVIDER_COINGECKO_PRICE_EP: Final[str] = "/simple/price"
-PROVIDERS_SUPPORTED = [PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO]
+PROVIDERS_SUPPORTED: Final[List[str]] = [PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO]
 
 # =========================================================================================================
 # Config Key Configuration
@@ -38,30 +37,6 @@ CONFIG_KEY_DEFAULTS_API_PROVIDER: Final[str] = "api_provider"
 CONFIG_DEFAULTS_CURRENCY: Final[str] = "EUR"
 CONFIG_DEFAULTS_API_TIMEOUT: Final[int] = 10
 
-CONFIG_DIRECTORY_PATH = Path.home() / ".crypto-fetch-py"
-CONFIG_FILE_PATH = CONFIG_DIRECTORY_PATH / "config.yaml"
-DEFAULT_API_CONFIG = {
-    CONFIG_HEADER_API_KEYS: {
-        PROVIDER_COINMARKETCAP: "",
-        PROVIDER_COINGECKO: ""
-    },
-    CONFIG_HEADER_DEFAULTS: {
-        CONFIG_KEY_DEFAULTS_CURRENCY: CONFIG_DEFAULTS_CURRENCY,
-        CONFIG_KEY_DEFAULTS_API_PROVIDER: PROVIDER_COINMARKETCAP,
-        CONFIG_KEY_DEFAULTS_API_TIMEOUT: CONFIG_DEFAULTS_API_TIMEOUT
-    },
-    PROVIDER_COINMARKETCAP: {
-        CONFIG_KEY_PROVIDER_NAME: PROVIDER_COINMARKETCAP,
-        CONFIG_KEY_PROVIDER_BASE_URL: PROVIDER_COINMARKETCAP_BASE_URL,
-        CONFIG_KEY_PROVIDER_PRICE_EP: PROVIDER_COINMARKETCAP_PRICE_EP
-    },
-    PROVIDER_COINGECKO: {
-        CONFIG_KEY_PROVIDER_NAME: PROVIDER_COINGECKO,
-        CONFIG_KEY_PROVIDER_BASE_URL: PROVIDER_COINGECKO_BASE_URL,
-        CONFIG_KEY_PROVIDER_PRICE_EP: PROVIDER_COINGECKO_PRICE_EP
-    }
-}
-
 # =========================================================================================================
 # Command Configuration
 # =========================================================================================================
@@ -76,7 +51,7 @@ CMD_CONFIG_RECREATE: Final[str] = "recreate"
 # =========================================================================================================
 # Currency Configuration (Map of all supported fiat currencies [code -> symbol])
 # =========================================================================================================
-CURRENCY_SYMBOL_MAP = {
+CURRENCY_SYMBOL_MAP: Final[Dict[str, str]] = {
     "EUR": "€",
     "GBP": "£",
     "USD": "$",
@@ -98,7 +73,7 @@ CURRENCY_SYMBOL_MAP = {
     "HUF": "Ft"   # Hungarian Forint
 }
 
-CURRENCY_CODE_ONLY_MAP = {
+CURRENCY_CODE_ONLY_MAP: Final[Dict[str, str]] = {
     "CHF": "Fr",  # Swiss Franc
     "NOK": "kr",  # Norwegian Krone
     "DKK": "kr",  # Danish Krone
@@ -106,13 +81,13 @@ CURRENCY_CODE_ONLY_MAP = {
     "HUF": "Ft"   # Hungarian Forint
 }
 
-SUPPORTED_CRYPTO_TICKERS = {
+SUPPORTED_CRYPTO_TICKERS: Final[Set[str]] = {
     "BTC", "ETH", "XRP", "BNB", "SOL", "ADA", "DOGE", "DOT", 
     "MATIC", "LTC", "AVAX", "LINK", "UNI", "XLM", "ATOM", 
     "HBAR", "ALGO", "VET", "ICP", "FIL"
 }
 
-CG_COIN_ID_MAP = {
+CG_COIN_ID_MAP: Final[Dict[str, str]] = {
     "BTC": "bitcoin",
     "ETH": "ethereum",
     "XRP": "ripple",
