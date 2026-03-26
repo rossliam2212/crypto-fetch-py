@@ -22,6 +22,12 @@ class RichLevelFormatter(logging.Formatter):
     _plain = logging.Formatter("[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s")
 
     def format(self, record: logging.LogRecord) -> str:
+        """
+        Formats a log record, applying level-based color to the level name for non-INFO records.
+
+        :param record: The log record to format.
+        :return: The formatted log message string.
+        """
         if record.levelno == logging.INFO:
             return record.getMessage()
 
@@ -35,7 +41,13 @@ class RichLevelFormatter(logging.Formatter):
 
 
 class _RichHandler(RichHandler):
+
     def emit(self, record: logging.LogRecord) -> None:
+        """
+        Emits a log record to stdout or stderr depending on the log level.
+
+        :param record: The log record to emit.
+        """
         console = _stderr_console if record.levelno >= logging.ERROR else _stdout_console
         try:
             msg = self.format(record)
@@ -48,7 +60,7 @@ def setup_logger(debug: bool = False) -> None:
     """
     Sets up the application logger.
 
-    :param debug: Whether debug logging should be enabled or not.
+    :param debug: Whether debug logging should be enabled.
     """
     logger = logging.getLogger(CF_LOGGER)
     logger.setLevel(logging.DEBUG if debug else logging.INFO)

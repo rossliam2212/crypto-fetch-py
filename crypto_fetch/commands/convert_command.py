@@ -14,6 +14,14 @@ class ConvertCommand(Command):
     """Convert cryptocurrency to fiat currency."""
 
     def __init__(self, client: BaseAPIClient, amount: str, ticker: str, currency: str, show_date: bool, provider: str):
+        """
+        :param client: The API client to use for fetching price data.
+        :param amount: The raw amount string to convert.
+        :param ticker: The cryptocurrency ticker symbol.
+        :param currency: The fiat currency code to convert to.
+        :param show_date: Whether to display the current timestamp in the output.
+        :param provider: The API provider name.
+        """
         super().__init__(client)
         self.amount_raw = amount
         self.amount_to_convert: float = 0.0

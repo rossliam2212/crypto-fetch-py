@@ -17,11 +17,18 @@ class PortfolioCommand(Command):
     """Display portfolio holdings with live prices."""
 
     def __init__(self, client: BaseAPIClient, portfolio_file: str, currency: str, provider: str):
+        """
+        :param client: The API client to use for fetching price data.
+        :param portfolio_file: Path to the portfolio file (YAML or txt).
+        :param currency: The fiat currency code to value holdings in.
+        :param provider: The API provider name.
+        """
         super().__init__(client)
         self.portfolio_file: Path = Path(portfolio_file)
         self.currency = currency
         self.provider = provider
         self.holdings: dict[str, float] = {}
+
 
     def _validate(self) -> None:
         logger.debug("Validating parsed arguments for portfolio command")
@@ -49,6 +56,7 @@ class PortfolioCommand(Command):
             logger.warning(f"No price data returned for: {', '.join(missing)}")
 
         format_portfolio_output(self.holdings, price_data, self.currency)
+
 
     def _load_holdings_file(self) -> dict[str, float]:
         """

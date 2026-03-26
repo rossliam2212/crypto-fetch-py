@@ -15,6 +15,9 @@ class ConfigCommand(Command):
     """Manage config file"""
 
     def __init__(self, action: str):
+        """
+        :param action: The config action to perform (init, validate, recreate).
+        """
         super().__init__(client=None)
         self.action = action
 
@@ -33,9 +36,11 @@ class ConfigCommand(Command):
             self._handle_recreate_action()
 
 
-    def _handle_validate_action(self):
+    def _handle_validate_action(self) -> None:
         """
-        Validates config file.
+        Reads and validates the config file, logging any errors found.
+
+        :raises ConfigError: If the file is missing, empty, has YAML errors, or fails validation.
         """
         if not CONFIG_FILE_PATH.exists():
             raise ConfigError("Config file not found. Run 'crypto-fetch config init' to create")
@@ -60,9 +65,9 @@ class ConfigCommand(Command):
             raise ConfigError("Run 'crypto-fetch config recreate' to restore defaults")
 
 
-    def _handle_recreate_action(self):
+    def _handle_recreate_action(self) -> None:
         """
-        Recreates config file.
+        Recreates the config file with default values.
         """
         save_api_config_to_file(DEFAULT_API_CONFIG)
         logger.info(f"Config file recreated at: '{CONFIG_FILE_PATH}' ✅")

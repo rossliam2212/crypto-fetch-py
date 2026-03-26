@@ -15,6 +15,14 @@ class PriceCommand(Command):
     """Fetch cryptocurrency prices"""
 
     def __init__(self, client: BaseAPIClient, tickers: str, currency: str, provider: str, verbose: bool, show_date: bool = False):
+        """
+        :param client: The API client to use for fetching price data.
+        :param tickers: Comma-separated cryptocurrency ticker symbols.
+        :param currency: The fiat currency code to fetch prices in.
+        :param provider: The API provider name.
+        :param verbose: Whether to show detailed output.
+        :param show_date: Whether to display the current timestamp in the output.
+        """
         super().__init__(client)
         self.tickers = tickers
         self.ticker_list: List[str] = []

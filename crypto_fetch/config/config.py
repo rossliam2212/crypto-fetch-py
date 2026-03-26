@@ -25,6 +25,8 @@ logger = logging.getLogger(CF_LOGGER)
 def init_api_config_file() -> None:
     """
     Initializes the config file with the defaults.
+
+    :raises OSError: If the config directory or file cannot be created.
     """
     CONFIG_DIRECTORY_PATH.mkdir(parents=True, exist_ok=True)
     if CONFIG_FILE_PATH.exists():
