@@ -53,4 +53,6 @@ class PriceCommand(Command):
         if self.show_date:
             logger.info(f"Timestamp: {get_timestamp()}")
         data = self.client.fetch_multiple_price_data(",".join(self.ticker_list), self.currency)
-        print_output(format_price_output(data, self.currency, self.client.config.base_url, self.verbose))
+        result = format_price_output(data, self.currency, self.client.config.base_url, self.verbose)
+        if result:
+            print_output(result)

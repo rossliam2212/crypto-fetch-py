@@ -1,10 +1,11 @@
 import math
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
 
 from crypto_fetch.commands.command_utils import get_timestamp
 from crypto_fetch.constants import (
@@ -22,7 +23,7 @@ def print_output(text: str) -> None:
     """Prints formatted output via rich console."""
     _console.print(text)
 
-def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> str:
+def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, api_url: str, verbose: bool) -> Optional[str]:
     """
     Formats the cryptocurrency price data received from the API.
 
@@ -31,80 +32,67 @@ def format_price_output(data: Dict[str, Dict[str, float]], currency_code: str, a
     :param api_url: The API URL.
     :param verbose: Whether the output should be verbose.
 
-    :returns: Formatted output string.
+    :returns: Formatted output string, or None if verbose (prints directly).
     """
     if not data:
         return "❌ No data available"
-    
-    output: List[str] = []
+
     currency_code: str = currency_code.upper()
     currency_symbol: str = _get_currency_symbol(currency_code)
 
+    if not verbose:
+        output: List[str] = []
+        for ticker, ticker_data in data.items():
+            price: float = ticker_data.get("price", 0)
+            output.append(_get_base_price_output(price, ticker, currency_symbol, currency_code))
+        return "\n".join(output)
+
     for ticker, ticker_data in data.items():
         price: float = ticker_data.get("price", 0)
-        base_line: str = _get_base_price_output(price, ticker, currency_symbol, currency_code)
+        price_str = _format_price(price, currency_symbol, currency_code)
+        _print_verbose_price_table(ticker, price_str, ticker_data, currency_code)
 
-        if not verbose:
-            # base output
-            output.append(base_line)
-            continue
-        
-        # verbose output
-        verbose_details: List[str] = _get_verbose_price_output(ticker_data, currency_code)
-        output.append(f"{base_line}\n  " + "\n  ".join(verbose_details))
+    _console.print(f"[dim]data fetched from '{api_url}'[/dim]\n")
+    return None
 
-    if verbose:
-        output.append(f"\n\\[data fetched from '{api_url}']")
 
-    return "\n".join(output)
+def _format_price(price: float, currency_symbol: str, currency_code: str) -> str:
+    if currency_symbol in ("$", "¥"):
+        return f"{currency_symbol}{price:.4f} ({currency_code})"
+    elif currency_code in CURRENCY_CODE_ONLY_MAP:
+        return f"{price:.4f}{currency_symbol} ({currency_code})"
+    else:
+        return f"{currency_symbol}{price:.4f}"
 
 
 def _get_base_price_output(price: float, ticker: str, currency_symbol: str, currency_code: str) -> str:
-    """
-    Gets the base output for a cryptocurrency.
-    e.g. 🔹 $XRP: €2.6894
-
-    :param price: The price of cryptocurrency.
-    :param ticker: The ticker of the cryptocurrency.
-    :param currency_symbol: The fiat currency symbol.
-    :param currency_code: The fiat currency code.
-
-    :return: The base output as a str.
-    """
-    if currency_symbol == "$" or currency_symbol == "¥":
-        return f"🔹 ${ticker}: [bold]{currency_symbol}{price:.4f}[/bold] ({currency_code})"
-    elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        return f"🔹 ${ticker}: [bold]{price:.4f}{currency_symbol}[/bold] ({currency_code})"
-    else:
-        return f"🔹 ${ticker}: [bold]{currency_symbol}{price:.4f}[/bold]"
+    price_str = _format_price(price, currency_symbol, currency_code)
+    return f"🔹 [bold]${ticker}[/bold]: [bold cyan]{price_str}[/bold cyan]"
 
 
-def _get_verbose_price_output(data: Dict[str, float], currency_code: str) -> List[str]:
-    """
-    Gets the verbose output for a cryptocurrency.
-
-    :param data: The parsed data received from the API.
-    :param currency_code: The fiat currency code.
-
-    :return: The verbose out as a list of strs.
-    """
-    verbose_details: List[str] = []
-
+def _print_verbose_price_table(ticker: str, price_str: str, data: Dict[str, float], currency_code: str) -> None:
     change_1hr = data.get("1h_change")
     change_24hr: float = data.get("24h_change", 0)
     change_7d = data.get("7d_change")
-    market_cap: float = data.get("market_cap", 0)
     volume_24hr: float = data.get("24h_volume", 0)
+    market_cap: float = data.get("market_cap", 0)
 
+    _console.print(f"[bold]${ticker}[/bold]  [bold cyan]{price_str}[/bold cyan]")
+    _console.rule(style="dim")
+
+    rows = []
     if change_1hr is not None:
-        verbose_details.append(f"\t> 1hr Change:  {_format_percentage_change(change_1hr)}")
-    verbose_details.append(f"\t> 24hr Change: {_format_percentage_change(change_24hr)}")
+        rows.append(("1h Change", _format_percentage_change(change_1hr)))
+    rows.append(("24h Change", _format_percentage_change(change_24hr)))
     if change_7d is not None:
-        verbose_details.append(f"\t> 7d Change:   {_format_percentage_change(change_7d)}")
-    verbose_details.append(f"\t> 24hr Volume: {_format_large_number(volume_24hr, currency_code)}")
-    verbose_details.append(f"\t> Market Cap:  {_format_large_number(market_cap, currency_code)}")
+        rows.append(("7d Change", _format_percentage_change(change_7d)))
+    rows.append(("24h Volume", _format_large_number(volume_24hr, currency_code)))
+    rows.append(("Market Cap", _format_large_number(market_cap, currency_code)))
 
-    return verbose_details
+    for label, value in rows:
+        _console.print(f"  [dim]{label:<12}[/dim]{value}")
+
+    _console.print()
 
 
 def format_convert_output(ticker: str, currency_code: str, amount_to_convert: float, converted_amount: float) -> str:
