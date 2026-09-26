@@ -1,4 +1,4 @@
-from typing import Dict, Final, List, Set
+from typing import Dict, Final, List
 
 # =========================================================================================================
 # Application Configuration
@@ -26,8 +26,8 @@ CONFIG_KEY_PROVIDER_NAME: Final[str] = "name"
 CONFIG_KEY_PROVIDER_BASE_URL: Final[str] = "base_url"
 CONFIG_KEY_PROVIDER_PRICE_EP: Final[str] = "price_ep"
 REQUIRED_PROVIDER_CONFIG_KEYS: Final[List[str]] = [
-    CONFIG_KEY_PROVIDER_NAME, 
-    CONFIG_KEY_PROVIDER_BASE_URL, 
+    CONFIG_KEY_PROVIDER_NAME,
+    CONFIG_KEY_PROVIDER_BASE_URL,
     CONFIG_KEY_PROVIDER_PRICE_EP
 ]
 CONFIG_KEY_DEFAULTS_CURRENCY: Final[str] = "currency"
@@ -81,14 +81,9 @@ CURRENCY_CODE_ONLY_MAP: Final[Dict[str, str]] = {
     "HUF": "Ft"   # Hungarian Forint
 }
 
-SUPPORTED_CRYPTO_TICKERS: Final[Set[str]] = {
-    # Known supported tickers. Used as a soft-validation hint only — tickers outside this set
-    # are passed through to the API rather than rejected. Keep in sync with CG_COIN_ID_MAP.
-    "BTC", "ETH", "XRP", "BNB", "SOL", "ADA", "DOGE", "DOT",
-    "MATIC", "LTC", "AVAX", "LINK", "UNI", "XLM", "ATOM",
-    "HBAR", "ALGO", "VET", "ICP", "FIL"
-}
-
+# =========================================================================================================
+# Cryptocurrency Configuration
+# =========================================================================================================
 CG_COIN_ID_MAP: Final[Dict[str, str]] = {
     "BTC": "bitcoin",
     "ETH": "ethereum",
@@ -111,6 +106,10 @@ CG_COIN_ID_MAP: Final[Dict[str, str]] = {
     "ICP": "internet-computer",
     "FIL": "filecoin",
 }
+
+# Derived from CG_COIN_ID_MAP — single source of truth. Used as a soft-validation hint only;
+# tickers outside this set are passed through to the API rather than rejected.
+SUPPORTED_CRYPTO_TICKERS: Final[frozenset] = frozenset(CG_COIN_ID_MAP.keys())
 
 # =========================================================================================================
 # Formatting / Display Configuration

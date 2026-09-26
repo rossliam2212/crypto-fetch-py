@@ -15,7 +15,7 @@ from crypto_fetch.constants import (
     CONFIG_KEY_PROVIDER_NAME, CONFIG_KEY_PROVIDER_BASE_URL, CONFIG_KEY_PROVIDER_PRICE_EP,
 )
 from crypto_fetch.commands.convert_command import ConvertCommand
-from crypto_fetch.exceptions import CryptoFetchError
+from crypto_fetch.exceptions import APIError, CryptoFetchError
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.commands.portfolio_command import PortfolioCommand
 from crypto_fetch.commands.price_command import PriceCommand
@@ -196,10 +196,13 @@ def _create_api_client(provider: str) -> BaseAPIClient:
 
     :param provider: The resolved provider name.
     :return: The API client.
+    :raises APIError: If the provider is not recognised.
     """
     if provider == PROVIDER_COINGECKO:
         return CoinGeckoAPIClient(_create_api_config(PROVIDER_COINGECKO))
-    return CoinMarketCapAPIClient(_create_api_config(PROVIDER_COINMARKETCAP))
+    if provider == PROVIDER_COINMARKETCAP:
+        return CoinMarketCapAPIClient(_create_api_config(PROVIDER_COINMARKETCAP))
+    raise APIError(f"Unknown provider: '{provider}'")
 
 
 def _create_api_config(provider: str) -> APIConfig:

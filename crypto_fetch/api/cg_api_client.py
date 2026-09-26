@@ -85,9 +85,9 @@ class CoinGeckoAPIClient(BaseAPIClient[Dict[str, Dict[str, float]]]):
 
             result[ticker.upper()] = {
                 "price": float(coin_data.get(currency_lower, 0)),
-                # "1h_change": float(coin_data.get(f"{currency_lower}_1h_change", 0)),
+                # 1h_change and 7d_change are not available from the /simple/price endpoint.
+                # The /coins/{id}/market_chart endpoint would be needed for historical intervals.
                 "24h_change": float(coin_data.get(f"{currency_lower}_24h_change", 0)),
-                # "7d_change": float(coin_data.get(f"{currency_lower}_7d_change", 0)),
                 "market_cap": float(coin_data.get(f"{currency_lower}_market_cap", 0)),
                 "24h_volume": float(coin_data.get(f"{currency_lower}_24h_vol", 0)),
             }
