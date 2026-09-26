@@ -63,7 +63,7 @@ class PortfolioCommand(Command):
         if missing:
             logger.warning(f"No price data returned for: {', '.join(missing)}")
 
-        format_portfolio_output(self.holdings, price_data, self.currency, show_date=self.show_date)
+        format_portfolio_output(self.holdings, price_data, self.currency, show_date=self.show_date, verbose=self.verbose)
 
 
     def _load_holdings_file(self) -> Dict[str, float]:

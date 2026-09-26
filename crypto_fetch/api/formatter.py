@@ -95,31 +95,43 @@ def _print_verbose_price_table(ticker: str, price_str: str, data: Dict[str, floa
     _console.print()
 
 
-def format_convert_output(ticker: str, currency_code: str, amount_to_convert: float, converted_amount: float) -> str:
+def format_convert_output(ticker: str, currency_code: str, amount_to_convert: float, converted_amount: float, spot_price: float, verbose: bool = False) -> str:
     """
     Formats the output for the convert command.
-    
+
     :param ticker: The cryptocurrency ticker.
     :param currency_code: The fiat currency code.
     :param amount_to_convert: The amount of cryptocurrency to convert.
-    :param converted_amount: The convert price.
+    :param converted_amount: The converted fiat amount.
+    :param spot_price: The spot price used for the conversion.
+    :param verbose: Whether to show detailed output (spot price, rate).
 
     :returns: Formatted output string.
     """
     currency_code: str = currency_code.upper()
     currency_symbol: str = _get_currency_symbol(currency_code)
 
-    if currency_symbol == "$" or currency_symbol == "¥":
-        output: str = f"🔸 {amount_to_convert} ${ticker} => [bold]{currency_symbol}{converted_amount:.4f}[/bold] ({currency_code})"
-    elif currency_code in CURRENCY_CODE_ONLY_MAP:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => [bold]{converted_amount:.4f}{currency_symbol}[/bold] ({currency_code})"
-    else:
-        output: str = f"🔸 {amount_to_convert} ${ticker} => [bold]{currency_symbol}{converted_amount:.4f}[/bold]"
+    converted_str = _format_price(converted_amount, currency_symbol, currency_code)
+    spot_str = _format_price(spot_price, currency_symbol, currency_code)
 
-    return output
+    summary = f"🔸 {amount_to_convert:g} {ticker} => [bold]{converted_str}[/bold]"
+
+    if not verbose:
+        return summary
+
+    rows = [
+        ("Amount",     f"{amount_to_convert:g} {ticker}"),
+        ("Spot price", spot_str),
+        ("Rate",       f"1 {ticker} = {spot_str}"),
+        ("Result",     f"[bold]{converted_str}[/bold]"),
+    ]
+    lines = [summary, ""]
+    for label, value in rows:
+        lines.append(f"  [dim]{label:<12}[/dim]{value}")
+    return "\n".join(lines)
 
 
-def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Dict[str, float]], currency_code: str, show_date: bool = False) -> None:
+def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Dict[str, float]], currency_code: str, show_date: bool = False, verbose: bool = False) -> None:
     """
     Renders the portfolio holdings table and summary panel.
 
@@ -127,6 +139,7 @@ def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Di
     :param price_data: Map of ticker -> price data from API.
     :param currency_code: The fiat currency code.
     :param show_date: Whether to display the current timestamp in the summary.
+    :param verbose: Whether to show additional columns (24h change, allocation %).
     """
     currency_code = currency_code.upper()
     symbol = _get_currency_symbol(currency_code)
@@ -138,12 +151,20 @@ def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Di
     table.add_column("Holding", justify="right")
     table.add_column("Value", justify="right")
     table.add_column("Spot Price", justify="right")
+    if verbose:
+        table.add_column("24h Change", justify="right")
+        table.add_column("Allocation", justify="right")
 
     total_value = 0.0
     for ticker, amount in holdings.items():
         price = price_data.get(ticker, {}).get("price", 0.0)
         value = amount * price
         total_value += value
+
+    for ticker, amount in holdings.items():
+        ticker_data = price_data.get(ticker, {})
+        price = ticker_data.get("price", 0.0)
+        value = amount * price
 
         if symbol in ("$", "¥"):
             value_str = f"{symbol}{value:,.2f}"
@@ -152,7 +173,16 @@ def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Di
             value_str = f"{value:,.2f} {symbol}"
             price_str = f"{price:,.2f} {symbol}"
 
-        table.add_row(ticker, str(amount), value_str, price_str)
+        holding_str = f"{amount:g}"
+
+        if verbose:
+            change_24h = ticker_data.get("24h_change", 0.0)
+            change_str = _format_percentage_change(change_24h)
+            alloc = (value / total_value * 100) if total_value > 0 else 0.0
+            alloc_str = f"{alloc:.1f}%"
+            table.add_row(ticker, holding_str, value_str, price_str, change_str, alloc_str)
+        else:
+            table.add_row(ticker, holding_str, value_str, price_str)
 
     console.print(table)
 

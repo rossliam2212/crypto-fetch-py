@@ -56,7 +56,7 @@ class ConvertCommand(Command):
 
         price: float = self.client.fetch_single_price_data(self.ticker, self.currency)
         converted_amount: float = self._calculate_conversion(price)
-        print_output(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount))
+        print_output(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount, spot_price=price, verbose=self.verbose))
 
 
     def _calculate_conversion(self, fetched_crypto_price: float) -> float:
