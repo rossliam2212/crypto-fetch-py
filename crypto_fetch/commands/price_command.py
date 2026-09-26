@@ -24,7 +24,7 @@ class PriceCommand(Command):
         :param show_date: Whether to display the current timestamp in the output.
         """
         super().__init__(client)
-        self.tickers = tickers
+        self.tickers_raw = tickers
         self.ticker_list: List[str] = []
         self.currency = currency
         self.provider = provider
@@ -38,9 +38,9 @@ class PriceCommand(Command):
         self.currency = resolve_currency(self.currency)
         self.provider = resolve_provider(self.provider)
 
-        self.ticker_list = [t.strip().upper() for t in self.tickers.split(",") if t.strip()]
+        self.ticker_list = [t.strip().upper() for t in self.tickers_raw.split(",") if t.strip()]
         if not self.ticker_list:
-            raise CommandError(f"No valid tickers provided. Got: {self.tickers}")
+            raise CommandError(f"No valid tickers provided. Got: {self.tickers_raw}")
         validate_tickers(self.ticker_list)
 
         logger.debug("Validated arguments successfully")

@@ -67,7 +67,7 @@ def init_api_config_file() -> None:
     
     save_api_config_to_file(DEFAULT_API_CONFIG)
     logger.info(f"Created config file at: '{CONFIG_FILE_PATH}'")
-    logger.info(f"Edit this file to add you API keys and set defaults")
+    logger.info(f"Edit this file to add your API keys and set defaults")
 
 
 def save_api_config_to_file(config: Dict[str, Any]) -> None:
