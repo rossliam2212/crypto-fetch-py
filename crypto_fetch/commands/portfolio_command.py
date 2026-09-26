@@ -18,17 +18,21 @@ logger = logging.getLogger(CF_LOGGER)
 class PortfolioCommand(Command):
     """Display portfolio holdings with live prices."""
 
-    def __init__(self, client: BaseAPIClient, portfolio_file: str, currency: str, provider: str):
+    def __init__(self, client: BaseAPIClient, portfolio_file: str, currency: str, provider: str, verbose: bool = False, show_date: bool = False):
         """
         :param client: The API client to use for fetching price data.
         :param portfolio_file: Path to the portfolio file (YAML or txt).
         :param currency: The fiat currency code to value holdings in.
         :param provider: The API provider name.
+        :param verbose: Whether to show detailed output.
+        :param show_date: Whether to display the current timestamp in the output.
         """
         super().__init__(client)
         self.portfolio_file: Path = Path(portfolio_file)
         self.currency = currency
         self.provider = provider
+        self.verbose = verbose
+        self.show_date = show_date
         self.holdings: Dict[str, float] = {}
 
 
@@ -59,7 +63,7 @@ class PortfolioCommand(Command):
         if missing:
             logger.warning(f"No price data returned for: {', '.join(missing)}")
 
-        format_portfolio_output(self.holdings, price_data, self.currency)
+        format_portfolio_output(self.holdings, price_data, self.currency, show_date=self.show_date)
 
 
     def _load_holdings_file(self) -> Dict[str, float]:

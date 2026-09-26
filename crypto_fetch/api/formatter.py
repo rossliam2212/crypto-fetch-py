@@ -119,13 +119,14 @@ def format_convert_output(ticker: str, currency_code: str, amount_to_convert: fl
     return output
 
 
-def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Dict[str, float]], currency_code: str) -> None:
+def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Dict[str, float]], currency_code: str, show_date: bool = False) -> None:
     """
     Renders the portfolio holdings table and summary panel.
 
     :param holdings: Map of ticker -> amount held.
     :param price_data: Map of ticker -> price data from API.
     :param currency_code: The fiat currency code.
+    :param show_date: Whether to display the current timestamp in the summary.
     """
     currency_code = currency_code.upper()
     symbol = _get_currency_symbol(currency_code)
@@ -157,9 +158,8 @@ def format_portfolio_output(holdings: Dict[str, float], price_data: Dict[str, Di
 
     summary = (
         f"Total Assets: {len(holdings)}\n"
-        f"Total Value:  {f'{symbol}{total_value:,.2f}' if symbol in ('$', '¥') else f'{total_value:,.2f} {symbol}'}\n"
-        "\n"
-        f"Timestamp:    {get_timestamp()}"
+        f"Total Value:  {f'{symbol}{total_value:,.2f}' if symbol in ('$', '¥') else f'{total_value:,.2f} {symbol}'}"
+        + (f"\n\nTimestamp:    {get_timestamp()}" if show_date else "")
     )
     console.print(Panel(summary, title="Portfolio Summary", expand=False))
 

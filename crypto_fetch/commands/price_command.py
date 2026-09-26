@@ -14,18 +14,17 @@ logger = logging.getLogger(CF_LOGGER)
 class PriceCommand(Command):
     """Fetch cryptocurrency prices"""
 
-    def __init__(self, client: BaseAPIClient, tickers: str, currency: str, provider: str, verbose: bool, show_date: bool = False):
+    def __init__(self, client: BaseAPIClient, tickers: list, currency: str, provider: str, verbose: bool, show_date: bool = False):
         """
         :param client: The API client to use for fetching price data.
-        :param tickers: Comma-separated cryptocurrency ticker symbols.
+        :param tickers: List of uppercase ticker symbols (pre-parsed by argparse).
         :param currency: The fiat currency code to fetch prices in.
         :param provider: The API provider name.
         :param verbose: Whether to show detailed output.
         :param show_date: Whether to display the current timestamp in the output.
         """
         super().__init__(client)
-        self.tickers_raw = tickers
-        self.ticker_list: List[str] = []
+        self.ticker_list: List[str] = tickers if tickers else []
         self.currency = currency
         self.provider = provider
         self.verbose = verbose
@@ -38,9 +37,8 @@ class PriceCommand(Command):
         self.currency = resolve_currency(self.currency)
         self.provider = resolve_provider(self.provider)
 
-        self.ticker_list = [t.strip().upper() for t in self.tickers_raw.split(",") if t.strip()]
         if not self.ticker_list:
-            raise CommandError(f"No valid tickers provided. Got: {self.tickers_raw}")
+            raise CommandError("No valid tickers provided")
         validate_tickers(self.ticker_list)
 
         logger.debug("Validated arguments successfully")

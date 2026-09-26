@@ -10,6 +10,7 @@ from crypto_fetch.constants import (
     CF_LOGGER, CF_VERSION,
     CMD_PRICE, CMD_CONVERT, CMD_CONFIG, CMD_PORTFOLIO,
     CMD_CONFIG_INIT, CMD_CONFIG_VALIDATE, CMD_CONFIG_RECREATE,
+    CURRENCY_SYMBOL_MAP,
     PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO,
     CONFIG_KEY_PROVIDER_NAME, CONFIG_KEY_PROVIDER_BASE_URL, CONFIG_KEY_PROVIDER_PRICE_EP,
 )
@@ -22,13 +23,34 @@ from crypto_fetch.commands.price_command import PriceCommand
 logger = logging.getLogger(CF_LOGGER)
 
 
+def _parse_currency(value: str) -> str:
+    """Argparse type callable — uppercases and validates a fiat currency code at parse time."""
+    upper = value.upper()
+    if upper not in CURRENCY_SYMBOL_MAP:
+        raise argparse.ArgumentTypeError(
+            f"Unknown currency '{upper}'. Supported: {', '.join(sorted(CURRENCY_SYMBOL_MAP))}"
+        )
+    return upper
+
+
+def _parse_tickers(value: str) -> list:
+    """Argparse type callable — splits a comma-separated ticker string into an uppercase list."""
+    tickers = [t.strip().upper() for t in value.split(",") if t.strip()]
+    if not tickers:
+        raise argparse.ArgumentTypeError("No valid tickers provided")
+    return tickers
+
+
 def main():
     """
     crypto-fetch entry point
     """
-    parser = argparse.ArgumentParser(prog="crypto-fetch", description="A command line tool to fetch cryptocurrency prices")
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-    parser.add_argument("--version", action='version', version=f"%(prog)s {CF_VERSION}")
+    parser = argparse.ArgumentParser(
+        prog="crypto-fetch",
+        description="A command line tool to fetch cryptocurrency prices",
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging (note: -d is used by --date on subcommands)")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {CF_VERSION}")
 
     subparser = parser.add_subparsers(dest="command", required=True)
     _setup_price_command(subparser)
@@ -61,6 +83,7 @@ def main():
                 ticker=args.ticker,
                 currency=args.currency,
                 provider=args.provider,
+                verbose=args.verbose,
                 show_date=args.date,
             )
             command._validate()
@@ -79,6 +102,8 @@ def main():
                 portfolio_file=args.file,
                 currency=args.currency,
                 provider=args.provider,
+                verbose=args.verbose,
+                show_date=args.date,
             )
             command._validate()
             command.client = _create_api_client(command.provider)
@@ -92,21 +117,30 @@ def main():
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
     """Sets up the price subcommand."""
-    price_parser = subparser.add_parser(CMD_PRICE, help="Fetch the price of a cryptocurrency")
-    price_parser.add_argument("tickers", help="Comma-separated tickers (e.g. BTC,XRP)")
-    price_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
-    price_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
-    price_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
+    price_parser = subparser.add_parser(
+        CMD_PRICE,
+        help="Fetch the price of a cryptocurrency",
+        epilog="Examples:\n  crypto-fetch price BTC\n  crypto-fetch price BTC,ETH -c USD -v\n  crypto-fetch price BTC -p coingecko",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    price_parser.add_argument("tickers", type=_parse_tickers, help="Comma-separated tickers e.g. BTC or BTC,ETH,XRP")
+    price_parser.add_argument("-c", "--currency", type=_parse_currency, default=None, help="Fiat currency (default: from config)")
+    _add_output_flags(price_parser)
     _add_provider_arg(price_parser)
 
 
 def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
     """Sets up the convert subcommand."""
-    convert_parser = subparser.add_parser(CMD_CONVERT, help="Convert crypto to fiat")
-    convert_parser.add_argument("amount", help="Amount to convert")
-    convert_parser.add_argument("-t", "--ticker", required=True, help="Target cryptocurrency")
-    convert_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
-    convert_parser.add_argument("-d", "--date", action="store_true", help="Display the date/time in the output")
+    convert_parser = subparser.add_parser(
+        CMD_CONVERT,
+        help="Convert a cryptocurrency amount to fiat",
+        epilog="Examples:\n  crypto-fetch convert 1.5 -t BTC\n  crypto-fetch convert 100 -t ETH -c GBP",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    convert_parser.add_argument("amount", type=float, help="Amount of cryptocurrency to convert")
+    convert_parser.add_argument("-t", "--ticker", required=True, help="Cryptocurrency ticker e.g. BTC")
+    convert_parser.add_argument("-c", "--currency", type=_parse_currency, default=None, help="Fiat currency (default: from config)")
+    _add_output_flags(convert_parser)
     _add_provider_arg(convert_parser)
 
 
@@ -128,18 +162,32 @@ def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
 
 def _setup_portfolio_command(subparser: argparse._SubParsersAction) -> None:
     """Sets up the portfolio subcommand."""
-    portfolio_parser = subparser.add_parser(CMD_PORTFOLIO, help="Display portfolio holdings with live prices")
-    portfolio_parser.add_argument("file", help="Path to portfolio YAML file")
-    portfolio_parser.add_argument("-c", "--currency", default=None, help="Currency (default: EUR)")
+    portfolio_parser = subparser.add_parser(
+        CMD_PORTFOLIO,
+        help="Display portfolio holdings with live prices",
+        epilog="Examples:\n  crypto-fetch portfolio portfolio.yaml\n  crypto-fetch portfolio holdings.yaml -c GBP -v",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    portfolio_parser.add_argument("file", help="Path to portfolio YAML or txt file")
+    portfolio_parser.add_argument("-c", "--currency", type=_parse_currency, default=None, help="Fiat currency (default: from config)")
+    _add_output_flags(portfolio_parser)
     _add_provider_arg(portfolio_parser)
 
 
-def _add_provider_arg(parser: argparse.ArgumentParser) -> None:
-    """Adds the shared --provider argument to a subcommand parser.
+def _add_output_flags(parser: argparse.ArgumentParser) -> None:
+    """Adds shared output flags (-v/--verbose, -d/--date) to a subcommand parser."""
+    parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
+    parser.add_argument("-d", "--date", action="store_true", help="Display the current timestamp in the output")
 
-    :param parser: The subcommand parser to add the argument to.
-    """
-    parser.add_argument("-p", "--provider", choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO], default=None, help="Choose API provider (default: coinmarketcap)")
+
+def _add_provider_arg(parser: argparse.ArgumentParser) -> None:
+    """Adds the shared --provider argument to a subcommand parser."""
+    parser.add_argument(
+        "-p", "--provider",
+        choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO],
+        default=None,
+        help="API provider to use (default: from config)",
+    )
 
 
 def _create_api_client(provider: str) -> BaseAPIClient:

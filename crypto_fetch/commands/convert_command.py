@@ -13,31 +13,27 @@ logger = logging.getLogger(CF_LOGGER)
 class ConvertCommand(Command):
     """Convert cryptocurrency to fiat currency."""
 
-    def __init__(self, client: BaseAPIClient, amount: str, ticker: str, currency: str, provider: str, show_date: bool = False):
+    def __init__(self, client: BaseAPIClient, amount: float, ticker: str, currency: str, provider: str, verbose: bool = False, show_date: bool = False):
         """
         :param client: The API client to use for fetching price data.
-        :param amount: The raw amount string to convert.
+        :param amount: The amount to convert (already typed as float by argparse).
         :param ticker: The cryptocurrency ticker symbol.
         :param currency: The fiat currency code to convert to.
         :param provider: The API provider name.
+        :param verbose: Whether to show detailed output.
         :param show_date: Whether to display the current timestamp in the output.
         """
         super().__init__(client)
-        self.amount_raw = amount
-        self.amount_to_convert: float = 0.0
+        self.amount_to_convert: float = amount
         self.ticker = ticker
         self.currency = currency
         self.provider = provider
+        self.verbose = verbose
         self.show_date = show_date
 
 
     def _validate(self) -> None:
         logger.debug("Validating parsed arguments for convert command")
-
-        try:
-            self.amount_to_convert = float(self.amount_raw)
-        except ValueError:
-            raise CommandError(f"Invalid amount: '{self.amount_raw}' is not a number")
 
         if self.amount_to_convert <= 0:
             raise CommandError(f"Amount must be positive. Received: '{self.amount_to_convert}'")
@@ -59,7 +55,6 @@ class ConvertCommand(Command):
             logger.info(f"Timestamp: {get_timestamp()}")
 
         price: float = self.client.fetch_single_price_data(self.ticker, self.currency)
-
         converted_amount: float = self._calculate_conversion(price)
         print_output(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount))
 
