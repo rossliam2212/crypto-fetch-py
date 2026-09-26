@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
 
+from typing import Dict
+
 import yaml  # type: ignore
 
 from crypto_fetch.api.api_client import BaseAPIClient
@@ -27,7 +29,7 @@ class PortfolioCommand(Command):
         self.portfolio_file: Path = Path(portfolio_file)
         self.currency = currency
         self.provider = provider
-        self.holdings: dict[str, float] = {}
+        self.holdings: Dict[str, float] = {}
 
 
     def _validate(self) -> None:
@@ -47,6 +49,8 @@ class PortfolioCommand(Command):
 
 
     def _execute(self) -> None:
+        if not self.holdings:
+            raise CommandError("No holdings loaded — ensure _validate() has been called before _execute()")
         logger.debug(f"Fetching prices for {len(self.holdings)} holding(s) using provider '{self.provider}'")
         tickers = ",".join(self.holdings.keys())
         price_data = self.client.fetch_multiple_price_data(tickers, self.currency)
@@ -58,7 +62,7 @@ class PortfolioCommand(Command):
         format_portfolio_output(self.holdings, price_data, self.currency)
 
 
-    def _load_holdings_file(self) -> dict[str, float]:
+    def _load_holdings_file(self) -> Dict[str, float]:
         """
         Parses the supplied portfolio file (YAML/txt) into a map of [ticker -> amount].
         - YAML format: 'TICKER: amount'
@@ -88,7 +92,7 @@ class PortfolioCommand(Command):
         return holdings
 
 
-    def _parse_txt_holdings(self, content: str) -> dict:
+    def _parse_txt_holdings(self, content: str) -> Dict[str, str]:
         """
         Parses plain-text portfolio format: 'TICKER amount' per line.
 

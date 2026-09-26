@@ -82,8 +82,10 @@ CURRENCY_CODE_ONLY_MAP: Final[Dict[str, str]] = {
 }
 
 SUPPORTED_CRYPTO_TICKERS: Final[Set[str]] = {
-    "BTC", "ETH", "XRP", "BNB", "SOL", "ADA", "DOGE", "DOT", 
-    "MATIC", "LTC", "AVAX", "LINK", "UNI", "XLM", "ATOM", 
+    # Known supported tickers. Used as a soft-validation hint only — tickers outside this set
+    # are passed through to the API rather than rejected. Keep in sync with CG_COIN_ID_MAP.
+    "BTC", "ETH", "XRP", "BNB", "SOL", "ADA", "DOGE", "DOT",
+    "MATIC", "LTC", "AVAX", "LINK", "UNI", "XLM", "ATOM",
     "HBAR", "ALGO", "VET", "ICP", "FIL"
 }
 

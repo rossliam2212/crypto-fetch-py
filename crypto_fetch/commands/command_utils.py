@@ -72,15 +72,15 @@ def validate_provider(value: str) -> str:
 
 def validate_tickers(tickers: List[str]) -> None:
     """
-    Validates a list of cryptocurrency ticker symbols.
+    Warns about any ticker symbols not in the known supported set.
+    Unknown tickers are still passed to the API — the API error will surface if they are truly invalid.
 
     :param tickers: List of uppercase ticker symbols (e.g. ['BTC', 'XRP']).
-    :raises CommandError: If any ticker is not supported.
     """
     logger.debug(f"Validating supplied crypto tickers: {tickers}")
-    invalid_tickers = [t for t in tickers if t not in SUPPORTED_CRYPTO_TICKERS]
-    if invalid_tickers:
-        raise CommandError(f"Unknown/Unsupported ticker(s). Received: {', '.join(invalid_tickers)}")
+    unknown_tickers = [t for t in tickers if t not in SUPPORTED_CRYPTO_TICKERS]
+    if unknown_tickers:
+        logger.warning(f"Ticker(s) not in known supported set, proceeding anyway: {', '.join(unknown_tickers)}")
 
 
 def get_timestamp() -> str:
