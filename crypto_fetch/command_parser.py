@@ -43,20 +43,43 @@ def main():
 
     try:
         if args.command == CMD_PRICE:
-            command = PriceCommand(None, args.tickers, args.currency, args.provider, args.verbose, args.date)
+            command = PriceCommand(
+                client=None,
+                tickers=args.tickers,
+                currency=args.currency,
+                provider=args.provider,
+                verbose=args.verbose,
+                show_date=args.date,
+            )
             command._validate()
             command.client = _create_api_client(command.provider)
             command._execute()
         elif args.command == CMD_CONVERT:
-            command = ConvertCommand(None, args.amount, args.ticker, args.currency, args.provider, args.date)
+            command = ConvertCommand(
+                client=None,
+                amount=args.amount,
+                ticker=args.ticker,
+                currency=args.currency,
+                provider=args.provider,
+                show_date=args.date,
+            )
             command._validate()
             command.client = _create_api_client(command.provider)
             command._execute()
         elif args.command == CMD_CONFIG:
-            command = ConfigCommand(args.action)
+            command = ConfigCommand(
+                action=args.config_action,
+                force=getattr(args, "force", False),
+                path=getattr(args, "path", None),
+            )
             command.run()
         elif args.command == CMD_PORTFOLIO:
-            command = PortfolioCommand(None, args.file, args.currency, args.provider)
+            command = PortfolioCommand(
+                client=None,
+                portfolio_file=args.file,
+                currency=args.currency,
+                provider=args.provider,
+            )
             command._validate()
             command.client = _create_api_client(command.provider)
             command._execute()
@@ -88,9 +111,19 @@ def _setup_convert_command(subparser: argparse._SubParsersAction) -> None:
 
 
 def _setup_config_command(subparser: argparse._SubParsersAction) -> None:
-    """Sets up the config subcommand."""
+    """Sets up the config subcommand with nested sub-subparsers for each action."""
     config_parser = subparser.add_parser(CMD_CONFIG, help="Manage configuration")
-    config_parser.add_argument("action", choices=[CMD_CONFIG_INIT, CMD_CONFIG_VALIDATE, CMD_CONFIG_RECREATE], help="Config action")
+    config_sub = config_parser.add_subparsers(dest="config_action", required=True)
+
+    init_parser = config_sub.add_parser(CMD_CONFIG_INIT, help="Create a new config file")
+    init_parser.add_argument("--force", action="store_true", help="Overwrite existing config file")
+
+    validate_parser = config_sub.add_parser(CMD_CONFIG_VALIDATE, help="Validate the config file")
+    validate_parser.add_argument("--path", default=None, metavar="PATH",
+                                 help="Path to a config file to validate (default: ~/.crypto-fetch-py/config.yaml)")
+
+    recreate_parser = config_sub.add_parser(CMD_CONFIG_RECREATE, help="Restore config file to defaults")
+    recreate_parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
 
 
 def _setup_portfolio_command(subparser: argparse._SubParsersAction) -> None:
