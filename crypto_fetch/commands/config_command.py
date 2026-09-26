@@ -22,10 +22,6 @@ class ConfigCommand(Command):
         self.action = action
 
 
-    def _validate(self) -> None:
-        pass
-
-
     def _execute(self) -> None:
         logger.debug(f"Executing config action: '{self.action}'")
         if self.action == CMD_CONFIG_INIT:

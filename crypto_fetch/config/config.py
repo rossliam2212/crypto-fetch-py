@@ -51,6 +51,8 @@ DEFAULT_API_CONFIG: Dict[str, Any] = {
 
 logger = logging.getLogger(CF_LOGGER)
 
+_config_cache: Optional[Dict[str, Any]] = None
+
 
 def init_api_config_file() -> None:
     """
@@ -70,21 +72,28 @@ def init_api_config_file() -> None:
 
 def save_api_config_to_file(config: Dict[str, Any]) -> None:
     """
-    Saves configuration to the config file.
+    Saves configuration to the config file and invalidates the in-memory cache.
     
     :param config: The configuration to save to the config file.
     """
+    global _config_cache
     CONFIG_DIRECTORY_PATH.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False)
+    _config_cache = None
 
 
 def load_api_config_from_file() -> Dict[str, Any]:
     """
     Loads and returns the YAML config file, or defaults if missing/invalid.
+    Result is cached in memory for the lifetime of the process.
 
     :return: the loaded config dict.
     """
+    global _config_cache
+    if _config_cache is not None:
+        return _config_cache
+
     if CONFIG_FILE_PATH.exists():
         try:
             with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as f:
@@ -97,7 +106,8 @@ def load_api_config_from_file() -> Dict[str, Any]:
                 if errors:
                     logger.warning(f"Config has {len(errors)} issue(s). Run 'crypto-fetch config validate' for details")
 
-                return config
+                _config_cache = config
+                return _config_cache
         except yaml.YAMLError as ex:
             logger.error(f"API config file is corrupted: {ex}. Using defaults.")
         except Exception as ex:

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from crypto_fetch.api.api_client import BaseAPIClient
 
@@ -6,16 +7,15 @@ from crypto_fetch.api.api_client import BaseAPIClient
 class Command(ABC):
     """Base class for all cli commands"""
 
-    def __init__(self, client: BaseAPIClient = None):
+    def __init__(self, client: Optional[BaseAPIClient] = None):
         """
         :param client: The API client to use for the command.
         """
         self.client = client
 
-    @abstractmethod
     def _validate(self) -> None:
         """
-        Validates supplied command arguments.
+        Validates supplied command arguments. No-op by default; override to add validation.
 
         :raises CommandError: If an error occurs during validation.
         """
