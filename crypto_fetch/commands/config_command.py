@@ -5,7 +5,7 @@ from typing import Optional
 import yaml  # type: ignore
 
 from crypto_fetch.commands.command import Command
-from crypto_fetch.config.config import CONFIG_FILE_PATH, DEFAULT_API_CONFIG, init_api_config_file, save_api_config_to_file
+from crypto_fetch.config.config import CONFIG_FILE_PATH, DEFAULT_API_CONFIG, save_api_config_to_file
 from crypto_fetch.config.config_validator import validate_config
 from crypto_fetch.constants import CF_LOGGER, CMD_CONFIG_INIT, CMD_CONFIG_RECREATE, CMD_CONFIG_VALIDATE
 from crypto_fetch.exceptions import ConfigError
@@ -46,7 +46,9 @@ class ConfigCommand(Command):
         if CONFIG_FILE_PATH.exists() and not self.force:
             logger.info(f"Config file already exists at: '{CONFIG_FILE_PATH}'. Use --force to overwrite")
             return
-        init_api_config_file()
+        save_api_config_to_file(DEFAULT_API_CONFIG)
+        logger.info(f"Config file created at: '{CONFIG_FILE_PATH}'")
+        logger.info("Edit this file to add your API keys and set defaults")
 
 
     def _handle_validate_action(self) -> None:
