@@ -1,6 +1,6 @@
 import logging
 
-from crypto_fetch.api.api_client import BaseAPIClient
+from crypto_fetch.api.api_client_factory import create_api_client
 from crypto_fetch.api.formatter import format_convert_output, print_output
 from crypto_fetch.commands.command import Command
 from crypto_fetch.commands.command_utils import get_timestamp, resolve_currency, resolve_provider, validate_tickers
@@ -13,9 +13,8 @@ logger = logging.getLogger(CF_LOGGER)
 class ConvertCommand(Command):
     """Convert cryptocurrency to fiat currency."""
 
-    def __init__(self, client: BaseAPIClient, amount: float, ticker: str, currency: str, provider: str, verbose: bool = False, show_date: bool = False):
+    def __init__(self, amount: float, ticker: str, currency: str, provider: str, verbose: bool = False, show_date: bool = False):
         """
-        :param client: The API client to use for fetching price data.
         :param amount: The amount to convert (already typed as float by argparse).
         :param ticker: The cryptocurrency ticker symbol.
         :param currency: The fiat currency code to convert to.
@@ -23,14 +22,13 @@ class ConvertCommand(Command):
         :param verbose: Whether to show detailed output.
         :param show_date: Whether to display the current timestamp in the output.
         """
-        super().__init__(client)
+        super().__init__()
         self.amount_to_convert: float = amount
         self.ticker = ticker
         self.currency = currency
         self.provider = provider
         self.verbose = verbose
         self.show_date = show_date
-
 
     def _validate(self) -> None:
         logger.debug("Validating parsed arguments for convert command")
@@ -46,6 +44,8 @@ class ConvertCommand(Command):
 
         logger.debug("Validated arguments successfully")
 
+    def _setup(self) -> None:
+        self.client = create_api_client(self.provider)
 
     def _execute(self) -> None:
         logger.debug(f"Executing convert command: amount='{self.amount_to_convert}', ticker='{self.ticker}', currency='{self.currency}'")
@@ -57,7 +57,6 @@ class ConvertCommand(Command):
         price: float = self.client.fetch_single_price_data(self.ticker, self.currency)
         converted_amount: float = self._calculate_conversion(price)
         print_output(format_convert_output(self.ticker, self.currency, self.amount_to_convert, converted_amount, spot_price=price, verbose=self.verbose))
-
 
     def _calculate_conversion(self, fetched_crypto_price: float) -> float:
         """

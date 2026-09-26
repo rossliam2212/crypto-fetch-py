@@ -21,6 +21,13 @@ class Command(ABC):
         """
         pass
 
+    def _setup(self) -> None:
+        """
+        Sets up resources required before execution (e.g. building the API client).
+        Called by run() after _validate() and before _execute(). No-op by default.
+        """
+        pass
+
     @abstractmethod
     def _execute(self) -> None:
         """
@@ -32,9 +39,10 @@ class Command(ABC):
 
     def run(self) -> None:
         """
-        Runs the command, validates it and executes it.
+        Runs the command: validates, sets up, then executes.
 
-        :raises CommandError: If validation or execution fails.
+        :raises CommandError: If any phase fails.
         """
         self._validate()
+        self._setup()
         self._execute()

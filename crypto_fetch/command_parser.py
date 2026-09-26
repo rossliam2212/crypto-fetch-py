@@ -1,10 +1,6 @@
 import argparse
 import logging
 
-from crypto_fetch.api.api_client import APIConfig, BaseAPIClient
-from crypto_fetch.api.cmc_api_client import CoinMarketCapAPIClient
-from crypto_fetch.api.cg_api_client import CoinGeckoAPIClient
-from crypto_fetch.config.config import get_api_provider_config
 from crypto_fetch.commands.config_command import InitCommand, ValidateCommand, RecreateCommand
 from crypto_fetch.constants import (
     CF_LOGGER, CF_VERSION,
@@ -12,10 +8,9 @@ from crypto_fetch.constants import (
     CMD_CONFIG_INIT, CMD_CONFIG_VALIDATE, CMD_CONFIG_RECREATE,
     CURRENCY_SYMBOL_MAP,
     PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO,
-    CONFIG_KEY_PROVIDER_NAME, CONFIG_KEY_PROVIDER_BASE_URL, CONFIG_KEY_PROVIDER_PRICE_EP,
 )
 from crypto_fetch.commands.convert_command import ConvertCommand
-from crypto_fetch.exceptions import APIError, CryptoFetchError
+from crypto_fetch.exceptions import CryptoFetchError
 from crypto_fetch.logger import setup_logger
 from crypto_fetch.commands.portfolio_command import PortfolioCommand
 from crypto_fetch.commands.price_command import PriceCommand
@@ -65,30 +60,22 @@ def main():
 
     try:
         if args.command == CMD_PRICE:
-            command = PriceCommand(
-                client=None,
+            PriceCommand(
                 tickers=args.tickers,
                 currency=args.currency,
                 provider=args.provider,
                 verbose=args.verbose,
                 show_date=args.date,
-            )
-            command._validate()
-            command.client = _create_api_client(command.provider)
-            command._execute()
+            ).run()
         elif args.command == CMD_CONVERT:
-            command = ConvertCommand(
-                client=None,
+            ConvertCommand(
                 amount=args.amount,
                 ticker=args.ticker,
                 currency=args.currency,
                 provider=args.provider,
                 verbose=args.verbose,
                 show_date=args.date,
-            )
-            command._validate()
-            command.client = _create_api_client(command.provider)
-            command._execute()
+            ).run()
         elif args.command == CMD_CONFIG:
             if args.config_action == CMD_CONFIG_INIT:
                 InitCommand(force=getattr(args, "force", False)).run()
@@ -97,17 +84,13 @@ def main():
             elif args.config_action == CMD_CONFIG_RECREATE:
                 RecreateCommand(force=getattr(args, "force", False)).run()
         elif args.command == CMD_PORTFOLIO:
-            command = PortfolioCommand(
-                client=None,
+            PortfolioCommand(
                 portfolio_file=args.file,
                 currency=args.currency,
                 provider=args.provider,
                 verbose=args.verbose,
                 show_date=args.date,
-            )
-            command._validate()
-            command.client = _create_api_client(command.provider)
-            command._execute()
+            ).run()
     except CryptoFetchError as ex:
         logger.error(f"'{args.command}' command failed. Error: {ex}")
     except Exception as ex:
@@ -187,36 +170,4 @@ def _add_provider_arg(parser: argparse.ArgumentParser) -> None:
         choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO],
         default=None,
         help="API provider to use (default: from config)",
-    )
-
-
-def _create_api_client(provider: str) -> BaseAPIClient:
-    """
-    Creates the appropriate API client for an already-resolved provider name.
-
-    :param provider: The resolved provider name.
-    :return: The API client.
-    :raises APIError: If the provider is not recognised.
-    """
-    if provider == PROVIDER_COINGECKO:
-        return CoinGeckoAPIClient(_create_api_config(PROVIDER_COINGECKO))
-    if provider == PROVIDER_COINMARKETCAP:
-        return CoinMarketCapAPIClient(_create_api_config(PROVIDER_COINMARKETCAP))
-    raise APIError(f"Unknown provider: '{provider}'")
-
-
-def _create_api_config(provider: str) -> APIConfig:
-    """
-    Builds an APIConfig from the provider's configuration in the config file.
-
-    :param provider: The provider name.
-    :return: The APIConfig for the given provider.
-    """
-    logger.debug(f"Creating API client for provider: '{provider}'")
-    config = get_api_provider_config(provider)
-
-    return APIConfig(
-        name=config.get(CONFIG_KEY_PROVIDER_NAME, provider),
-        base_url=config.get(CONFIG_KEY_PROVIDER_BASE_URL, ""),
-        price_endpoint=config.get(CONFIG_KEY_PROVIDER_PRICE_EP, ""),
     )

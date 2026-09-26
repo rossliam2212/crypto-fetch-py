@@ -1,11 +1,10 @@
 import logging
 from pathlib import Path
-
 from typing import Dict
 
 import yaml  # type: ignore
 
-from crypto_fetch.api.api_client import BaseAPIClient
+from crypto_fetch.api.api_client_factory import create_api_client
 from crypto_fetch.api.formatter import format_portfolio_output
 from crypto_fetch.commands.command import Command
 from crypto_fetch.commands.command_utils import resolve_currency, resolve_provider, validate_tickers
@@ -18,23 +17,21 @@ logger = logging.getLogger(CF_LOGGER)
 class PortfolioCommand(Command):
     """Display portfolio holdings with live prices."""
 
-    def __init__(self, client: BaseAPIClient, portfolio_file: str, currency: str, provider: str, verbose: bool = False, show_date: bool = False):
+    def __init__(self, portfolio_file: str, currency: str, provider: str, verbose: bool = False, show_date: bool = False):
         """
-        :param client: The API client to use for fetching price data.
         :param portfolio_file: Path to the portfolio file (YAML or txt).
         :param currency: The fiat currency code to value holdings in.
         :param provider: The API provider name.
         :param verbose: Whether to show detailed output.
         :param show_date: Whether to display the current timestamp in the output.
         """
-        super().__init__(client)
+        super().__init__()
         self.portfolio_file: Path = Path(portfolio_file)
         self.currency = currency
         self.provider = provider
         self.verbose = verbose
         self.show_date = show_date
         self.holdings: Dict[str, float] = {}
-
 
     def _validate(self) -> None:
         logger.debug("Validating parsed arguments for portfolio command")
@@ -51,10 +48,10 @@ class PortfolioCommand(Command):
 
         logger.debug("Arguments validated successfully")
 
+    def _setup(self) -> None:
+        self.client = create_api_client(self.provider)
 
     def _execute(self) -> None:
-        if not self.holdings:
-            raise CommandError("No holdings loaded — ensure _validate() has been called before _execute()")
         logger.debug(f"Fetching prices for {len(self.holdings)} holding(s) using provider '{self.provider}'")
         tickers = ",".join(self.holdings.keys())
         price_data = self.client.fetch_multiple_price_data(tickers, self.currency)
@@ -64,7 +61,6 @@ class PortfolioCommand(Command):
             logger.warning(f"No price data returned for: {', '.join(missing)}")
 
         format_portfolio_output(self.holdings, price_data, self.currency, show_date=self.show_date, verbose=self.verbose)
-
 
     def _load_holdings_file(self) -> Dict[str, float]:
         """
@@ -94,7 +90,6 @@ class PortfolioCommand(Command):
             except (ValueError, TypeError):
                 raise CommandError(f"Invalid amount for '{k}': '{v}' is not a number")
         return holdings
-
 
     def _parse_txt_holdings(self, content: str) -> Dict[str, str]:
         """
