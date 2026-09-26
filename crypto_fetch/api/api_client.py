@@ -116,11 +116,17 @@ class BaseAPIClient(ABC, Generic[T]):
             if not response.ok:
                 error_msg = response.json().get("status", {}).get("error_message")
                 raise APIError(error_msg or f"API request failed with status {response.status_code}")
-            
+
             logger.debug(f"Request was successful. Status code: {response.status_code}")
             return response.json()
-        except Exception as ex:
-            raise APIError(f"{str(ex)}") from ex
+        except APIError:
+            raise
+        except requests.exceptions.Timeout:
+            raise APIError("Request timed out. The API did not respond in time")
+        except requests.exceptions.ConnectionError:
+            raise APIError("Failed to connect to the API")
+        except requests.exceptions.RequestException as ex:
+            raise APIError(f"Request failed: {str(ex)}") from ex
 
     def _get_api_key(self) -> str:
         """

@@ -62,6 +62,9 @@ def main():
             command._execute()
     except CryptoFetchError as ex:
         logger.error(f"'{args.command}' command failed. Error: {ex}")
+    except Exception as ex:
+        logger.debug("Unexpected error", exc_info=True)
+        logger.error(f"Unexpected error: {ex}")
 
 
 def _setup_price_command(subparser: argparse._SubParsersAction) -> None:
