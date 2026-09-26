@@ -1,11 +1,10 @@
 import argparse
 import logging
-from typing import Optional
 
 from crypto_fetch.api.api_client import APIConfig, BaseAPIClient
 from crypto_fetch.api.cmc_api_client import CoinMarketCapAPIClient
 from crypto_fetch.api.cg_api_client import CoinGeckoAPIClient
-from crypto_fetch.config.config import get_api_provider_config, get_default_api_provider
+from crypto_fetch.config.config import get_api_provider_config
 from crypto_fetch.commands.config_command import ConfigCommand
 from crypto_fetch.constants import (
     CF_LOGGER, CF_VERSION,
@@ -42,20 +41,25 @@ def main():
     setup_logger(args.debug)
     logger.debug("Debug logs enabled")
 
-    client = _create_api_client(args)
     try:
         if args.command == CMD_PRICE:
-            command = PriceCommand(client, args.tickers, args.currency, args.provider, args.verbose, args.date)
-            command.run()
+            command = PriceCommand(None, args.tickers, args.currency, args.provider, args.verbose, args.date)
+            command._validate()
+            command.client = _create_api_client(command.provider)
+            command._execute()
         elif args.command == CMD_CONVERT:
-            command = ConvertCommand(client, args.amount, args.ticker, args.currency, args.date, args.provider)
-            command.run()
+            command = ConvertCommand(None, args.amount, args.ticker, args.currency, args.provider, args.date)
+            command._validate()
+            command.client = _create_api_client(command.provider)
+            command._execute()
         elif args.command == CMD_CONFIG:
             command = ConfigCommand(args.action)
             command.run()
         elif args.command == CMD_PORTFOLIO:
-            command = PortfolioCommand(client, args.file, args.currency, args.provider)
-            command.run()
+            command = PortfolioCommand(None, args.file, args.currency, args.provider)
+            command._validate()
+            command.client = _create_api_client(command.provider)
+            command._execute()
     except CryptoFetchError as ex:
         logger.error(f"'{args.command}' command failed. Error: {ex}")
 
@@ -102,17 +106,13 @@ def _add_provider_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-p", "--provider", choices=[PROVIDER_COINMARKETCAP, PROVIDER_COINGECKO], default=None, help="Choose API provider (default: coinmarketcap)")
 
 
-def _create_api_client(args: argparse.Namespace) -> Optional[BaseAPIClient]:
+def _create_api_client(provider: str) -> BaseAPIClient:
     """
-    Creates the appropriate API client based on the supplied provider.
+    Creates the appropriate API client for an already-resolved provider name.
 
-    :param args: The parsed command line arguments.
-    :return: The API client, or None if the config command is being run.
+    :param provider: The resolved provider name.
+    :return: The API client.
     """
-    if args.command == CMD_CONFIG:
-        return None
-
-    provider = getattr(args, "provider", None) or get_default_api_provider()
     if provider == PROVIDER_COINGECKO:
         return CoinGeckoAPIClient(_create_api_config(PROVIDER_COINGECKO))
     return CoinMarketCapAPIClient(_create_api_config(PROVIDER_COINMARKETCAP))
