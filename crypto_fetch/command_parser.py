@@ -5,7 +5,7 @@ from crypto_fetch.api.api_client import APIConfig, BaseAPIClient
 from crypto_fetch.api.cmc_api_client import CoinMarketCapAPIClient
 from crypto_fetch.api.cg_api_client import CoinGeckoAPIClient
 from crypto_fetch.config.config import get_api_provider_config
-from crypto_fetch.commands.config_command import ConfigCommand
+from crypto_fetch.commands.config_command import InitCommand, ValidateCommand, RecreateCommand
 from crypto_fetch.constants import (
     CF_LOGGER, CF_VERSION,
     CMD_PRICE, CMD_CONVERT, CMD_CONFIG, CMD_PORTFOLIO,
@@ -90,12 +90,12 @@ def main():
             command.client = _create_api_client(command.provider)
             command._execute()
         elif args.command == CMD_CONFIG:
-            command = ConfigCommand(
-                action=args.config_action,
-                force=getattr(args, "force", False),
-                path=getattr(args, "path", None),
-            )
-            command.run()
+            if args.config_action == CMD_CONFIG_INIT:
+                InitCommand(force=getattr(args, "force", False)).run()
+            elif args.config_action == CMD_CONFIG_VALIDATE:
+                ValidateCommand(path=getattr(args, "path", None)).run()
+            elif args.config_action == CMD_CONFIG_RECREATE:
+                RecreateCommand(force=getattr(args, "force", False)).run()
         elif args.command == CMD_PORTFOLIO:
             command = PortfolioCommand(
                 client=None,
